@@ -44,7 +44,7 @@ func (gm *GameManager) Run() {
 		for _, p := range waitingRoom {
 			p.NewGameChannel() <- g.channel
 		}
-		g.Run()
+		go g.Run()
 		log.Printf("created game %s", gameID)
 	}
 }
