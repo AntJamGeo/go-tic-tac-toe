@@ -98,8 +98,8 @@ body {
 }
 
 #gridContainer {
-  height: 80%;
-  aspect-ratio: 1 / 1;
+  height: min(50vh, 50vw);
+  width: min(50vh, 50vw);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -111,6 +111,7 @@ body {
   grid-template-rows: repeat(3, 1fr);
   width: 100%;
   height: 100%;
+  font-size: min(15vh, 15vw);
 }
 
 .cell {
@@ -119,17 +120,22 @@ body {
   justify-content: center;
 }
 
+#cell0 {
+  border-right: min(1vh, 1vw) solid aqua;
+  border-bottom: min(1vh, 1vw) solid aqua;
+}
+
 #cell1 {
   border-right: min(1vh, 1vw) solid aqua;
   border-bottom: min(1vh, 1vw) solid aqua;
 }
 
 #cell2 {
-  border-right: min(1vh, 1vw) solid aqua;
   border-bottom: min(1vh, 1vw) solid aqua;
 }
 
 #cell3 {
+  border-right: min(1vh, 1vw) solid aqua;
   border-bottom: min(1vh, 1vw) solid aqua;
 }
 
@@ -139,18 +145,13 @@ body {
 }
 
 #cell5 {
-  border-right: min(1vh, 1vw) solid aqua;
   border-bottom: min(1vh, 1vw) solid aqua;
 }
 
 #cell6 {
-  border-bottom: min(1vh, 1vw) solid aqua;
-}
-
-#cell7 {
   border-right: min(1vh, 1vw) solid aqua;
 }
 
-#cell8 {
+#cell7 {
   border-right: min(1vh, 1vw) solid aqua;
 }

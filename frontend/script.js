@@ -72,7 +72,7 @@ function joinGame() {
                 for (let i = 0; i < 9; i++) {
                     const cell = document.createElement('div');
                     cells.push(cell);
-                    cell.id = `cell${i+1}`;
+                    cell.id = `cell${i}`;
                     cell.classList.add("cell");
                     grid.appendChild(cell);
                 }
@@ -87,7 +87,6 @@ function joinGame() {
                 if (data.msgType === "gameStart") {
                     playerSymbol = yourTurn ? "x" : "o";
                 }
-                console.log(playerSymbol);
                 break;
         }
     }
