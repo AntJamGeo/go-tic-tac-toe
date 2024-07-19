@@ -1,6 +1,7 @@
 // Page elements
 let playerNameInput;
 let joinGameButton;
+let gameHeaderDiv;
 let gameHeader;
 
 // Data
@@ -39,22 +40,36 @@ function joinGame() {
                 // Clear the page
                 document.body.innerHTML = ""
 
+                gamePage = document.createElement("div");
+                gamePage.id = "gamePage";
+                document.body.appendChild(gamePage);
+
                 // Set a title "Player vs Opponent"
+                gameHeaderDiv = document.createElement("div");
+                gameHeaderDiv.id = "gameHeaderDiv";
+                gamePage.appendChild(gameHeaderDiv);
                 gameHeader = document.createElement("h1");
+                gameHeader.id = "gameHeader";
                 gameHeader.textContent = playerName + " vs " + opponentName;
-                document.body.appendChild(gameHeader);
+                gameHeaderDiv.appendChild(gameHeader);
             
                 // Create grid
+                const gameArea = document.createElement("div");
+                gameArea.id = "gameArea";
+                gamePage.appendChild(gameArea);
                 const gridContainer = document.createElement('div');
-                gridContainer.id = "grid";
-                document.body.appendChild(gridContainer);
+                gridContainer.id = "gridContainer";
+                gameArea.appendChild(gridContainer);
+                const grid = document.createElement('div');
+                grid.id = "grid";
+                gridContainer.appendChild(grid);
                 const cells = [];
                 for (let i = 0; i < 9; i++) {
                     const cell = document.createElement('div');
                     cells.push(cell);
                     cell.id = `cell${i+1}`;
-                    cell.classList.add('grid-item');
-                    gridContainer.appendChild(cell);
+                    cell.classList.add("cell");
+                    grid.appendChild(cell);
                 }
                 break;
         }
