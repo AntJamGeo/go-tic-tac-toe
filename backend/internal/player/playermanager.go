@@ -8,14 +8,19 @@ import (
 )
 
 type PlayerManager struct {
+	matchmaker chan *Player
 }
 
 func NewPlayerManager() *PlayerManager {
-	return &PlayerManager{}
+	return &PlayerManager{
+		matchmaker: make(chan *Player),
+	}
 }
 
-func (pm *PlayerManager) Run() {
-
+func (pm *PlayerManager) Run(mmChannel chan *Player) {
+	for p := range pm.matchmaker {
+		mmChannel <- p
+	}
 }
 
 func (pm *PlayerManager) HandlePlayer(ws *websocket.Conn) {
@@ -39,6 +44,11 @@ func (pm *PlayerManager) HandlePlayer(ws *websocket.Conn) {
 	log.Printf("created player %s:%s", p.name, p.id)
 
 	// Send for matchmaking
+	pm.matchmaker <- p
+
+	// Receive a new game channel and set it so that the player knows where to send messages
+	p.playerToGameChannel = <-p.newGameChannel
+	log.Printf("%s added to game %s", p.name, p.GameID)
 
 	// Game Play
 }
