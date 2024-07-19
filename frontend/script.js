@@ -5,9 +5,14 @@ let gameHeaderDiv;
 let gameHeader;
 
 // Data
+let socket;
 let gameID;
 let playerName;
 let opponentName;
+let playerSymbol;
+let gameState;
+let yourTurn;
+let cells;
 
 window.addEventListener("DOMContentLoaded", (event) => {
     joinGameButton = document.getElementById("joinGameButton");
@@ -22,7 +27,7 @@ function joinGame() {
         return;
     }
 
-    const socket = new WebSocket("ws://localhost:3000/play");
+    socket = new WebSocket("ws://localhost:3000/play");
 
     socket.onopen = function(event) {
         socket.send(JSON.stringify({ msgType: "connecting", playerName: playerName }));
@@ -63,7 +68,7 @@ function joinGame() {
                 const grid = document.createElement('div');
                 grid.id = "grid";
                 gridContainer.appendChild(grid);
-                const cells = [];
+                cells = [];
                 for (let i = 0; i < 9; i++) {
                     const cell = document.createElement('div');
                     cells.push(cell);
@@ -71,6 +76,18 @@ function joinGame() {
                     cell.classList.add("cell");
                     grid.appendChild(cell);
                 }
+                break;
+            case "gameStart":
+            case "gameUpdate":
+                gameState = data.gameState;
+                yourTurn = data.yourTurn === "true" ? true : false;
+                for (let i = 0; i < gameState.length; i++) {
+                    updateCell(i, gameState[i], yourTurn);
+                }
+                if (data.msgType === "gameStart") {
+                    playerSymbol = yourTurn ? "x" : "o";
+                }
+                console.log(playerSymbol);
                 break;
         }
     }
@@ -90,4 +107,30 @@ function disallowJoinGame() {
     joinGameButton.style.backgroundColor = "rgb(30, 30, 43)";
     joinGameButton.style.color = "gray";
     joinGameButton.style.cursor = "default";
+}
+
+function makeMove(event) {
+    let cell = event.target;
+    for (let i = 0; i < gameState.length; i++) {
+        cells[i].removeEventListener("click", makeMove);
+        cells[i].style.cursor = "";
+    }
+    socket.send(JSON.stringify({ msgType: "gameUpdate", "cell": cell.id.slice(4) }))
+}
+
+function updateCell(i, cellState, yourTurn) {
+    switch (cellState) {
+        case "x":
+            cells[i].textContent = "x";
+            break;
+        case "o":
+            cells[i].textContent = "o";
+            break;
+        case "-":
+            if (yourTurn) {
+                cells[i].addEventListener("click", makeMove);
+                cells[i].style.cursor = "pointer";
+            }
+            break;
+    }
 }

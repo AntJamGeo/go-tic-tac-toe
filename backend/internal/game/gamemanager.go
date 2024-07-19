@@ -42,7 +42,6 @@ func (gm *GameManager) Run() {
 		gm.games[gameID] = g
 		gm.gamesMu.Unlock()
 		for _, p := range waitingRoom {
-			p.GameID = g.ID()
 			p.NewGameChannel() <- g.channel
 		}
 		g.Run()

@@ -6,7 +6,6 @@ type Player struct {
 	newGameChannel      chan chan *map[string]string
 	gameToPlayerChannel chan *map[string]string
 	playerToGameChannel chan *map[string]string
-	GameID              string
 }
 
 func NewPlayer(id string, name string) *Player {
@@ -16,7 +15,6 @@ func NewPlayer(id string, name string) *Player {
 		newGameChannel:      make(chan chan *map[string]string),
 		gameToPlayerChannel: make(chan *map[string]string),
 		playerToGameChannel: nil,
-		GameID:              "",
 	}
 }
 
