@@ -32,17 +32,20 @@ func (gm *GameManager) Run() {
 				break
 			}
 		}
-		playerChannels := make([]chan *map[string]string, 0)
+		playerNames := make(map[string]string)
+		playerChannels := make(map[string]chan *map[string]string)
 		for _, p := range waitingRoom {
-			playerChannels = append(playerChannels, p.GameToPlayerChannel())
+			playerNames[p.ID()] = p.Name()
+			playerChannels[p.ID()] = p.GameToPlayerChannel()
 		}
-		g := NewGame(gameID, playerChannels)
+		g := NewGame(gameID, playerNames, playerChannels)
 		gm.games[gameID] = g
 		gm.gamesMu.Unlock()
 		for _, p := range waitingRoom {
 			p.GameID = g.ID()
 			p.NewGameChannel() <- g.channel
 		}
+		g.Run()
 		log.Printf("created game %s", gameID)
 	}
 }

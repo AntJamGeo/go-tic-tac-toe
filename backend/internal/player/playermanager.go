@@ -50,9 +50,15 @@ func (pm *PlayerManager) HandlePlayer(ws *websocket.Conn) {
 	p.playerToGameChannel = <-p.newGameChannel
 	log.Printf("%s:%s added to game %s", p.name, p.id, p.GameID)
 
+	// Get opponent name
+	p.playerToGameChannel <- &map[string]string{"msgType": "getOpponentName", "playerID": playerID}
+	log.Printf("getting opponent name for %s:%s", p.name, p.id)
+	rsp := <-p.gameToPlayerChannel
+	opponentName := (*rsp)["opponentName"]
+
 	// Send new game data back to client
 	msgType = "joinGame"
-	msg = map[string]string{"msgType": msgType, "gameID": p.GameID, "opponentName": ""}
+	msg = map[string]string{"msgType": msgType, "gameID": p.GameID, "opponentName": opponentName}
 	if ok := utils.WriteMsg(ws, &msg, msgType, playerName, playerID); !ok {
 		log.Printf("remember to fix this bit") // need to tell all players game is cancelled !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		return
