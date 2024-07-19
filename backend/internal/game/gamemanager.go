@@ -11,17 +11,19 @@ import (
 type GameManager struct {
 	games   map[string]*Game
 	gamesMu sync.Mutex
+	channel chan []*player.Player
 }
 
 func NewGameManager() *GameManager {
 	return &GameManager{
 		games:   make(map[string]*Game),
 		gamesMu: sync.Mutex{},
+		channel: make(chan []*player.Player),
 	}
 }
 
-func (gm *GameManager) Run(mmToGM chan []*player.Player, gmToMM chan *Game) {
-	for players := range mmToGM {
+func (gm *GameManager) Run() {
+	for waitingRoom := range gm.channel {
 		gm.gamesMu.Lock()
 		var gameID string
 		for {
@@ -30,10 +32,21 @@ func (gm *GameManager) Run(mmToGM chan []*player.Player, gmToMM chan *Game) {
 				break
 			}
 		}
-		g := NewGame(gameID, players)
+		playerChannels := make([]chan *map[string]string, 0)
+		for _, p := range waitingRoom {
+			playerChannels = append(playerChannels, p.GameToPlayerChannel())
+		}
+		g := NewGame(gameID, playerChannels)
 		gm.games[gameID] = g
 		gm.gamesMu.Unlock()
+		for _, p := range waitingRoom {
+			p.GameID = g.ID()
+			p.NewGameChannel() <- g.channel
+		}
 		log.Printf("created game %s", gameID)
-		gmToMM <- g
 	}
+}
+
+func (gm *GameManager) Channel() chan []*player.Player {
+	return gm.channel
 }

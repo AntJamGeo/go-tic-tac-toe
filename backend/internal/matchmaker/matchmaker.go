@@ -4,7 +4,6 @@ import (
 	"log"
 	"sync"
 
-	"github.com/AntJamGeo/go-tic-tac-toe/backend/internal/game"
 	"github.com/AntJamGeo/go-tic-tac-toe/backend/internal/player"
 )
 
@@ -24,7 +23,7 @@ func NewMatchmaker() *Matchmaker {
 	}
 }
 
-func (mm *Matchmaker) Run(mmToGM chan []*player.Player, gmToMM chan *game.Game) {
+func (mm *Matchmaker) Run(gmChannel chan []*player.Player) {
 	for p := range mm.channel {
 		// Add player p to the waiting room
 		mm.waitingRoomMu.Lock()
@@ -37,14 +36,7 @@ func (mm *Matchmaker) Run(mmToGM chan []*player.Player, gmToMM chan *game.Game) 
 			mm.waitingRoom = mm.waitingRoom[maxRoomSize:]
 			mm.waitingRoomMu.Unlock()
 			log.Printf("room filled, creating game")
-			mmToGM <- filledRoom
-			g := <-gmToMM
-			for _, p := range filledRoom {
-				go func() {
-					p.NewGameChannel() <- g.Channel()
-					p.GameID = g.ID()
-				}()
-			}
+			gmChannel <- filledRoom
 		} else {
 			mm.waitingRoomMu.Unlock()
 		}

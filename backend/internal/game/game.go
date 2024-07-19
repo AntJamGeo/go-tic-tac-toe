@@ -1,18 +1,16 @@
 package game
 
-import "github.com/AntJamGeo/go-tic-tac-toe/backend/internal/player"
-
 type Game struct {
-	gameID  string
-	players []*player.Player
-	channel chan *map[string]string
+	gameID         string
+	playerChannels []chan *map[string]string
+	channel        chan *map[string]string
 }
 
-func NewGame(gameID string, players []*player.Player) *Game {
+func NewGame(gameID string, playerChannels []chan *map[string]string) *Game {
 	return &Game{
-		gameID:  gameID,
-		players: players,
-		channel: make(chan *map[string]string),
+		gameID:         gameID,
+		playerChannels: playerChannels,
+		channel:        make(chan *map[string]string),
 	}
 }
 

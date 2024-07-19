@@ -48,7 +48,15 @@ func (pm *PlayerManager) HandlePlayer(ws *websocket.Conn) {
 
 	// Receive a new game channel and set it so that the player knows where to send messages
 	p.playerToGameChannel = <-p.newGameChannel
-	log.Printf("%s added to game %s", p.name, p.GameID)
+	log.Printf("%s:%s added to game %s", p.name, p.id, p.GameID)
+
+	// Send new game data back to client
+	msgType = "joinGame"
+	msg = map[string]string{"msgType": msgType, "gameID": p.GameID, "opponentName": ""}
+	if ok := utils.WriteMsg(ws, &msg, msgType, playerName, playerID); !ok {
+		log.Printf("remember to fix this bit") // need to tell all players game is cancelled !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		return
+	}
 
 	// Game Play
 }
