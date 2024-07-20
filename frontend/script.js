@@ -7,6 +7,7 @@ let nameInput;
 let joinGameButton;
 
 // Game page elements
+let gamePage;
 let gameHeaderDiv;
 let gameHeader;
 let gameArea;
@@ -38,56 +39,49 @@ window.addEventListener("DOMContentLoaded", (event) => {
 function loadHomePage() {
     document.body.innerHTML = "";
 
-    homePage = createElement("div", "homePage", document.body);
+    homePage = createDiv("home-page", document.body, ["page"]);
 
-    ticTacToeHeader = createElement("h1", "ticTacToeHeader", homePage);
-    ticTacToeHeader.innerText = "tic-tac-toe";
+    ticTacToeHeader = createHeader("tic-tac-toe-header", homePage, 1, "tic-tac-toe");
 
-    joinGameUI = createElement("div", "joinGameUI", homePage);
+    joinGameUI = createDiv("join-game-UI", homePage);
 
-    nameInputLabel = createElement("div", "nameInputLabel", joinGameUI);
+    nameInputLabel = createDiv("name-input-label", joinGameUI);
     nameInputLabel.innerText = "enter a username";
 
-    nameInput = createElement("input", "nameInput", joinGameUI);
-    nameInput.type = "text";
-    nameInput.setAttribute("tabindex", "1");
+    nameInput = createInput("name-input", joinGameUI, "text", "1");
     nameInput.addEventListener("keydown", function(event) {
         if (event.key === "Enter") {
             joinGameNewUserName();
         }
     })
 
-    joinGameButton = createButton("joinGameButton", joinGameUI, "2", "join game", joinGameNewUserName);
+    joinGameButton = createButton("join-game-button", joinGameUI, "2", "join game", joinGameNewUserName);
 }
 
 function loadGamePage() {
     // Clear the page
     document.body.innerHTML = ""
 
-    gamePage = createElement("div", "gamePage", document.body);
+    gamePage = createDiv("game-page", document.body, ["page"]);
 
     // Set a title "Player vs Opponent"
-    gameHeaderDiv = createElement("div", "gameHeaderDiv", gamePage);
-    gameHeader = createElement("h1", "gameHeader", gameHeaderDiv);
-    gameHeader.textContent = playerName + " vs " + opponentName;
+    gameHeaderDiv = createDiv("game-header-div", gamePage);
+    gameHeader = createHeader("game-header", gameHeaderDiv, 1, `${playerName} vs ${opponentName}`);
 
     // Create grid
-    gameArea = createElement("div", "gameArea", gamePage);
-    gridContainer = createElement("div", "gridContainer", gameArea)
-    grid = createElement("div", "grid", gridContainer);
-    grid.classList.add("unselectable");
+    gameArea = createDiv("game-area", gamePage);
+    gridContainer = createDiv("grid-container", gameArea);
+    grid = createDiv("grid", gridContainer, ["unselectable"]);
     cells = [];
     for (let i = 0; i < 9; i++) {
-        const cell = createElement("div", `cell${i}`, grid);
-        cell.classList.add("cell");
+        const cell = createDiv(`cell${i}`, grid, ["cell"])
         cells.push(cell);
     }
 
     // Add area for notifications and "play again" buttons for when the game finishes
-    notificationArea = createElement("div", "notificationArea", gamePage);
-    notificationTextArea = createElement("div", "notificationTextArea", notificationArea);
-    notification = createElement("p", "notification", notificationTextArea);
-    notification.innerText = "loading game..."
+    notificationArea = createDiv("notification-area", gamePage);
+    notificationTextArea = createDiv("notification-text-area", notificationArea);
+    notification = createP("notification", notificationTextArea, "loading game...");
 }
 
 // Functions for joining games
@@ -162,9 +156,9 @@ function joinGame() {
     }
 
     socket.onclose = function(event) {
-        notificationButtonArea = createElement("div", "notificationButtonArea", notificationArea);
-        joinNewGameButton = createButton("joinNewGameButton", notificationButtonArea, "1", "join new game", joinGameSameUserName);
-        backToHomeButton = createButton("backToHomeButton", notificationButtonArea, "2", "back to home", loadHomePage);
+        notificationButtonArea = createDiv("notification-button-area", notificationArea);
+        joinNewGameButton = createButton("join-new-game-button", notificationButtonArea, "1", "join new game", joinGameSameUserName);
+        backToHomeButton = createButton("back-to-home-button", notificationButtonArea, "2", "back to home", loadHomePage);
     }
 
     socket.onerror = function(event) {
@@ -207,16 +201,21 @@ function updateWinningCells(winningCells) {
 }
 
 // Element creation helper functions
-function createElement(tagName, idName, parentElement) {
+function createElement(tagName, idName, parentElement, classes = []) {
     newElement = document.createElement(tagName);
     newElement.id = idName;
+    newElement.classList.add(...classes);
     parentElement.appendChild(newElement);
     return newElement;
 }
 
-function createButton(idName, parentElement, tabindex, innerText, listener) {
-    button = createElement("div", idName, parentElement);
-    button.classList.add("button", "unselectable");
+function createDiv(idName, parentElement, classes = []) {
+    return createElement("div", idName, parentElement, classes);
+}
+
+function createButton(idName, parentElement, tabindex, innerText, listener, classes = []) {
+    button = createElement("div", idName, parentElement, ["button", "unselectable"]);
+    button.classList.add(...classes);
     button.setAttribute("tabindex", tabindex);
     button.innerText = innerText;
     button.addEventListener("click", listener);
@@ -226,4 +225,26 @@ function createButton(idName, parentElement, tabindex, innerText, listener) {
         }
     })
     return button;
+}
+
+function createHeader(idName, parentElement, level, innerText, classes = []) {
+    if (level > 6 || level < 1) {
+        throw Error("header level should be between 1 and 6");
+    }
+    header = createElement(`h${level}`, idName, parentElement, classes);
+    header.innerText = innerText;
+    return header
+}
+
+function createInput(idName, parentElement, type, tabindex = "", classes = []) {
+    input = createElement("input", idName, parentElement, classes);
+    input.type = type;
+    input.setAttribute("tabindex", tabindex);
+    return input;
+}
+
+function createP(idName, parentElement, innerText, classes = []) {
+    p = createElement("p", idName, parentElement, classes);
+    p.innerText = innerText;
+    return p
 }

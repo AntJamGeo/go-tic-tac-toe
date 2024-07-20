@@ -1,8 +1,9 @@
-.josefin-sans {
-  font-family: "Josefin Sans", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 350;
-  font-style: normal;
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  padding: 0;
 }
 
 .button {
@@ -36,6 +37,12 @@
   user-select: none;
 }
 
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 body {
   background-color: rgb(51, 51, 51);
   display: flex;
@@ -49,22 +56,14 @@ body {
   color: aqua;
 }
 
-#homePage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 0;
-  padding: 0;
-}
-
-#ticTacToeHeader {
+#tic-tac-toe-header {
   font-weight: 700;
   font-size: min(20vh, 20vw);
   text-align: center;
   margin: 0;
 }
 
-#joinGameUI {
+#join-game-UI {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -72,48 +71,41 @@ body {
   height: 40%;
 }
 
-#nameInputLabel {
+#name-input-label {
   color: aqua;
   display: flex;
   justify-content: center;
   font-size: min(10vh, 10vw);
 }
 
-#nameInput {
+#name-input {
   width: 80%;
   font-size: min(5vh, 5vw);
   margin: min(1vh, 1vw);
 }
 
-#joinGameButton {
+#join-game-button {
   margin-top: min(2vh, 2vw);
 }
 
-#gamePage {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-}
-
-#gameHeaderDiv {
+#game-header-div {
   flex: 1;
   display: flex;
   justify-content: center;
   align-items: end;
 }
 
-#gameHeader {
+#game-header {
   font-size: min(7vh, 7vw);
 }
 
-#gameArea {
+#game-area {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-#gridContainer {
+#grid-container {
   height: min(50vh, 50vw);
   width: min(50vh, 50vw);
   display: flex;
@@ -128,12 +120,6 @@ body {
   width: 100%;
   height: 100%;
   font-size: min(15vh, 15vw);
-}
-
-.cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 #cell0 {
@@ -172,7 +158,7 @@ body {
   border-right: min(1vh, 1vw) solid aqua;
 }
 
-#notificationArea {
+#notification-area {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -180,7 +166,7 @@ body {
   align-items: center;
 }
 
-#notificationTextArea {
+#notification-text-area {
   display: flex;
   font-size: min(6vh, 6vw);
   align-items: start;
@@ -190,7 +176,7 @@ body {
   margin: min(3vh, 3vw);
 }
 
-#notificationButtonArea {
+#notification-button-area {
   display: flex;
   gap: min(5vh, 5vw);
   white-space: nowrap;
