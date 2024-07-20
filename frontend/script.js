@@ -1,10 +1,12 @@
-// Page elements
+// Home page elements
 let homePage;
 let ticTacToeHeader;
 let joinGameUI;
 let nameInputLabel;
 let nameInput;
 let joinGameButton;
+
+// Game page elements
 let gameHeaderDiv;
 let gameHeader;
 let gameArea;
@@ -32,6 +34,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
     loadHomePage();
 })
 
+// Page loaders
 function loadHomePage() {
     document.body.innerHTML = "";
 
@@ -57,6 +60,38 @@ function loadHomePage() {
     joinGameButton = createButton("joinGameButton", joinGameUI, "2", "join game", joinGameNewUserName);
 }
 
+function loadGamePage() {
+    // Clear the page
+    document.body.innerHTML = ""
+
+    gamePage = createElement("div", "gamePage", document.body);
+
+    // Set a title "Player vs Opponent"
+    gameHeaderDiv = createElement("div", "gameHeaderDiv", gamePage);
+    gameHeader = createElement("h1", "gameHeader", gameHeaderDiv);
+    gameHeader.textContent = playerName + " vs " + opponentName;
+
+    // Create grid
+    gameArea = createElement("div", "gameArea", gamePage);
+    gridContainer = createElement("div", "gridContainer", gameArea)
+    grid = createElement("div", "grid", gridContainer);
+    grid.classList.add("unselectable");
+    cells = [];
+    for (let i = 0; i < 9; i++) {
+        const cell = createElement("div", `cell${i}`, grid);
+        cell.classList.add("cell");
+        cells.push(cell);
+    }
+
+    // Add area for notifications and "play again" buttons for when the game finishes
+    notificationArea = createElement("div", "notificationArea", gamePage);
+    notificationTextArea = createElement("div", "notificationTextArea", notificationArea);
+    notification = createElement("p", "notification", notificationTextArea);
+    notification.innerText = "loading game..."
+}
+
+// Functions for joining games
+// New user name is set when joining game from home page
 function joinGameNewUserName() {
     playerName = nameInput.value.trim();
     if (playerName === "") {
@@ -72,6 +107,7 @@ function joinGameNewUserName() {
     joinGame();
 }
 
+// Same user name is used when joining a game straight after finishing another
 function joinGameSameUserName() {
     joinNewGameButton.removeEventListener("click", joinGameSameUserName);
     joinNewGameButton.classList.add("button-clicked");
@@ -80,6 +116,7 @@ function joinGameSameUserName() {
     joinGame();
 }
 
+// Main logic with game loop
 function joinGame() {
     socket = new WebSocket("ws://localhost:3000/play");
 
@@ -94,54 +131,7 @@ function joinGame() {
             case "joinGame":
                 gameID = data.gameID;
                 opponentName = data.opponentName;
-
-                // Clear the page
-                document.body.innerHTML = ""
-
-                gamePage = document.createElement("div");
-                gamePage.id = "gamePage";
-                document.body.appendChild(gamePage);
-
-                // Set a title "Player vs Opponent"
-                gameHeaderDiv = document.createElement("div");
-                gameHeaderDiv.id = "gameHeaderDiv";
-                gamePage.appendChild(gameHeaderDiv);
-                gameHeader = document.createElement("h1");
-                gameHeader.id = "gameHeader";
-                gameHeader.textContent = playerName + " vs " + opponentName;
-                gameHeaderDiv.appendChild(gameHeader);
-            
-                // Create grid
-                gameArea = document.createElement("div");
-                gameArea.id = "gameArea";
-                gamePage.appendChild(gameArea);
-                gridContainer = document.createElement('div');
-                gridContainer.id = "gridContainer";
-                gameArea.appendChild(gridContainer);
-                grid = document.createElement('div');
-                grid.id = "grid";
-                gridContainer.appendChild(grid);
-                grid.classList.add("unselectable");
-                cells = [];
-                for (let i = 0; i < 9; i++) {
-                    const cell = document.createElement('div');
-                    cells.push(cell);
-                    cell.id = `cell${i}`;
-                    cell.classList.add("cell");
-                    grid.appendChild(cell);
-                }
-
-                // Add area for notifications and "play again" buttons for when the game finishes
-                notificationArea = document.createElement("div");
-                notificationArea.id = "notificationArea";
-                gamePage.appendChild(notificationArea);
-                notificationTextArea = document.createElement("div");
-                notificationTextArea.id = "notificationTextArea";
-                notificationArea.appendChild(notificationTextArea);
-                notification = document.createElement("p");
-                notification.id = "notification";
-                notification.innerText = "loading game..."
-                notificationTextArea.appendChild(notification);
+                loadGamePage();
                 break;
             case "gameStart":
             case "gameUpdate":
@@ -182,6 +172,7 @@ function joinGame() {
     }
 }
 
+// Game updates
 function makeMove(event) {
     let cell = event.target;
     for (let i = 0; i < gameState.length; i++) {
@@ -215,6 +206,7 @@ function updateWinningCells(winningCells) {
     }
 }
 
+// Element creation helper functions
 function createElement(tagName, idName, parentElement) {
     newElement = document.createElement(tagName);
     newElement.id = idName;
