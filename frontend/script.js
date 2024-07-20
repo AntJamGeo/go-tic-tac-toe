@@ -1,5 +1,9 @@
 // Page elements
-let playerNameInput;
+let homePage;
+let ticTacToeHeader;
+let joinGameUI;
+let nameInputLabel;
+let nameInput;
 let joinGameButton;
 let gameHeaderDiv;
 let gameHeader;
@@ -11,6 +15,8 @@ let notificationArea;
 let notificationTextArea;
 let notification;
 let notificationButtonArea;
+let joinNewGameButton;
+let backToHomeButton;
 
 // Data
 let socket;
@@ -23,23 +29,62 @@ let yourTurn;
 let winningCells;
 
 window.addEventListener("DOMContentLoaded", (event) => {
-    joinGameButton = document.getElementById("joinGameButton");
-    joinGameButton.addEventListener("click", joinGame);
+    loadHomePage();
 })
 
-function joinGame() {
-    playerNameInput = document.getElementById("nameInput");
-    playerName = playerNameInput.value.trim();
+function loadHomePage() {
+    document.body.innerHTML = "";
+
+    homePage = createElement("div", "homePage", document.body);
+
+    ticTacToeHeader = createElement("h1", "ticTacToeHeader", homePage);
+    ticTacToeHeader.innerText = "tic-tac-toe";
+
+    joinGameUI = createElement("div", "joinGameUI", homePage);
+
+    nameInputLabel = createElement("div", "nameInputLabel", joinGameUI);
+    nameInputLabel.innerText = "enter a username";
+
+    nameInput = createElement("input", "nameInput", joinGameUI);
+    nameInput.type = "text";
+    nameInput.setAttribute("tabindex", "1");
+    nameInput.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+            joinGameNewUserName();
+        }
+    })
+
+    joinGameButton = createButton("joinGameButton", joinGameUI, "2", "join game", joinGameNewUserName);
+}
+
+function joinGameNewUserName() {
+    playerName = nameInput.value.trim();
     if (playerName === "") {
         alert("Please enter a username");
         return;
     }
 
+    nameInput.disabled = true;
+    joinGameButton.removeEventListener("click", joinGameNewUserName);
+    joinGameButton.classList.add("button-clicked");
+    joinGameButton.setAttribute("tabindex", "");
+
+    joinGame();
+}
+
+function joinGameSameUserName() {
+    joinNewGameButton.removeEventListener("click", joinGameSameUserName);
+    joinNewGameButton.classList.add("button-clicked");
+    joinNewGameButton.setAttribute("tabindex", "");
+
+    joinGame();
+}
+
+function joinGame() {
     socket = new WebSocket("ws://localhost:3000/play");
 
     socket.onopen = function(event) {
         socket.send(JSON.stringify({ msgType: "connecting", playerName: playerName }));
-        disallowJoinGame();
     }
 
     socket.onmessage = function(event) {
@@ -76,6 +121,7 @@ function joinGame() {
                 grid = document.createElement('div');
                 grid.id = "grid";
                 gridContainer.appendChild(grid);
+                grid.classList.add("unselectable");
                 cells = [];
                 for (let i = 0; i < 9; i++) {
                     const cell = document.createElement('div');
@@ -116,9 +162,7 @@ function joinGame() {
                 winningCells = data.cells;
 
                 notification.innerText = winner ? "you win!" : "better luck next time..."
-                notificationButtonArea = document.createElement("div");
-                notificationButtonArea.id = "notificationButtonArea";
-                notificationArea.appendChild(notificationButtonArea);
+
                 for (let i = 0; i < gameState.length; i++) {
                     updateCell(i, gameState[i], false);
                 }
@@ -128,20 +172,14 @@ function joinGame() {
     }
 
     socket.onclose = function(event) {
-
+        notificationButtonArea = createElement("div", "notificationButtonArea", notificationArea);
+        joinNewGameButton = createButton("joinNewGameButton", notificationButtonArea, "1", "join new game", joinGameSameUserName);
+        backToHomeButton = createButton("backToHomeButton", notificationButtonArea, "2", "back to home", loadHomePage);
     }
 
     socket.onerror = function(event) {
 
     }
-}
-
-function disallowJoinGame() {
-    playerNameInput.disabled = true;
-    joinGameButton.removeEventListener("click", joinGame);
-    joinGameButton.style.backgroundColor = "rgb(30, 30, 43)";
-    joinGameButton.style.color = "gray";
-    joinGameButton.style.cursor = "default";
 }
 
 function makeMove(event) {
@@ -175,4 +213,25 @@ function updateWinningCells(winningCells) {
         cells[winningCells[i]].style.backgroundColor = "aqua";
         cells[winningCells[i]].style.color = "rgb(51, 51, 51)";
     }
+}
+
+function createElement(tagName, idName, parentElement) {
+    newElement = document.createElement(tagName);
+    newElement.id = idName;
+    parentElement.appendChild(newElement);
+    return newElement;
+}
+
+function createButton(idName, parentElement, tabindex, innerText, listener) {
+    button = createElement("div", idName, parentElement);
+    button.classList.add("button", "unselectable");
+    button.setAttribute("tabindex", tabindex);
+    button.innerText = innerText;
+    button.addEventListener("click", listener);
+    button.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+            listener();
+        }
+    })
+    return button;
 }
