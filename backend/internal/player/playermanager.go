@@ -72,10 +72,8 @@ func (pm *PlayerManager) HandlePlayer(ws *websocket.Conn) {
 		msgType := (*rsp)["msgType"]
 		switch msgType {
 		case "gameStart", "gameUpdate":
-			gameState := (*rsp)["gameState"]
 			yourTurn := (*rsp)["yourTurn"]
-			msg = map[string]string{"msgType": msgType, "gameState": gameState, "yourTurn": yourTurn}
-			if ok := utils.WriteMsg(ws, &msg, msgType, playerName, playerID); !ok {
+			if ok := utils.WriteMsg(ws, rsp, msgType, playerName, playerID); !ok {
 				log.Printf("remember to fix this bit") // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 				return
 			}
@@ -94,10 +92,7 @@ func (pm *PlayerManager) HandlePlayer(ws *websocket.Conn) {
 				p.playerToGameChannel <- &map[string]string{"msgType": msgType, "playerID": playerID, "cell": cell}
 			}
 		case "gameWon":
-			gameState := (*rsp)["gameState"]
-			winner := (*rsp)["winner"]
-			msg = map[string]string{"msgType": msgType, "gameState": gameState, "winner": winner}
-			if ok := utils.WriteMsg(ws, &msg, msgType, playerName, playerID); !ok {
+			if ok := utils.WriteMsg(ws, rsp, msgType, playerName, playerID); !ok {
 				log.Printf("remember to fix this bit") // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 				return
 			}

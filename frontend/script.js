@@ -13,6 +13,7 @@ let playerSymbol;
 let gameState;
 let yourTurn;
 let cells;
+let winningCells;
 
 window.addEventListener("DOMContentLoaded", (event) => {
     joinGameButton = document.getElementById("joinGameButton");
@@ -88,6 +89,15 @@ function joinGame() {
                     playerSymbol = yourTurn ? "x" : "o";
                 }
                 break;
+            case "gameWon":
+                gameState = data.gameState;
+                winner = data.winner === "true" ? true : false;
+                winningCells = data.cells;
+                for (let i = 0; i < gameState.length; i++) {
+                    updateCell(i, gameState[i], false);
+                }
+                updateWinningCells(winningCells);
+                break;
         }
     }
 
@@ -131,5 +141,12 @@ function updateCell(i, cellState, yourTurn) {
                 cells[i].style.cursor = "pointer";
             }
             break;
+    }
+}
+
+function updateWinningCells(winningCells) {
+    for (let i = 0; i < winningCells.length; i++) {
+        cells[winningCells[i]].style.backgroundColor = "aqua";
+        cells[winningCells[i]].style.color = "rgb(51, 51, 51)";
     }
 }
