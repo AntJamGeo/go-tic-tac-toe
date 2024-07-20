@@ -3,6 +3,14 @@ let playerNameInput;
 let joinGameButton;
 let gameHeaderDiv;
 let gameHeader;
+let gameArea;
+let gridContainer;
+let grid;
+let cells;
+let notificationArea;
+let notificationTextArea;
+let notification;
+let notificationButtonArea;
 
 // Data
 let socket;
@@ -12,7 +20,6 @@ let opponentName;
 let playerSymbol;
 let gameState;
 let yourTurn;
-let cells;
 let winningCells;
 
 window.addEventListener("DOMContentLoaded", (event) => {
@@ -60,13 +67,13 @@ function joinGame() {
                 gameHeaderDiv.appendChild(gameHeader);
             
                 // Create grid
-                const gameArea = document.createElement("div");
+                gameArea = document.createElement("div");
                 gameArea.id = "gameArea";
                 gamePage.appendChild(gameArea);
-                const gridContainer = document.createElement('div');
+                gridContainer = document.createElement('div');
                 gridContainer.id = "gridContainer";
                 gameArea.appendChild(gridContainer);
-                const grid = document.createElement('div');
+                grid = document.createElement('div');
                 grid.id = "grid";
                 gridContainer.appendChild(grid);
                 cells = [];
@@ -77,11 +84,25 @@ function joinGame() {
                     cell.classList.add("cell");
                     grid.appendChild(cell);
                 }
+
+                // Add area for notifications and "play again" buttons for when the game finishes
+                notificationArea = document.createElement("div");
+                notificationArea.id = "notificationArea";
+                gamePage.appendChild(notificationArea);
+                notificationTextArea = document.createElement("div");
+                notificationTextArea.id = "notificationTextArea";
+                notificationArea.appendChild(notificationTextArea);
+                notification = document.createElement("p");
+                notification.id = "notification";
+                notification.innerText = "loading game..."
+                notificationTextArea.appendChild(notification);
                 break;
             case "gameStart":
             case "gameUpdate":
                 gameState = data.gameState;
                 yourTurn = data.yourTurn === "true" ? true : false;
+
+                notification.innerText = yourTurn ? "your turn" : "waiting for opponent..."
                 for (let i = 0; i < gameState.length; i++) {
                     updateCell(i, gameState[i], yourTurn);
                 }
@@ -93,6 +114,11 @@ function joinGame() {
                 gameState = data.gameState;
                 winner = data.winner === "true" ? true : false;
                 winningCells = data.cells;
+
+                notification.innerText = winner ? "you win!" : "better luck next time..."
+                notificationButtonArea = document.createElement("div");
+                notificationButtonArea.id = "notificationButtonArea";
+                notificationArea.appendChild(notificationButtonArea);
                 for (let i = 0; i < gameState.length; i++) {
                     updateCell(i, gameState[i], false);
                 }

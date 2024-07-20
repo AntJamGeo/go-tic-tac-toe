@@ -80,10 +80,10 @@ body {
 }
 
 #gameHeaderDiv {
-  height: 20%;
+  flex: 1;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: end;
 }
 
 #gameHeader {
@@ -91,10 +91,9 @@ body {
 }
 
 #gameArea {
-  height: 80%;
   display: flex;
   justify-content: center;
-  align-items: start;
+  align-items: center;
 }
 
 #gridContainer {
@@ -160,4 +159,27 @@ body {
 
 #cell7 {
   border-right: min(1vh, 1vw) solid aqua;
+}
+
+#notificationArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: center;
+}
+
+#notificationTextArea {
+  display: flex;
+  font-size: min(6vh, 6vw);
+  align-items: start;
+}
+
+#notification {
+  margin: min(3vh, 3vw);
+}
+
+#notificationButtonArea {
+  width: 100%;
+  height: 100%;
 }
