@@ -114,6 +114,9 @@ function joinGameSameUserName() {
     joinNewGameButton.removeEventListener("click", joinGameSameUserName);
     joinNewGameButton.classList.add("button-clicked");
     joinNewGameButton.setAttribute("tabindex", "");
+    backToHomeButton.removeEventListener("click", backToHome);
+    backToHomeButton.classList.add("button-clicked");
+    backToHomeButton.setAttribute("tabindex", "");
 
     joinGame();
 }

@@ -35,6 +35,7 @@ func (pm *PlayerManager) listenToClient(ws *websocket.Conn, wg *sync.WaitGroup, 
 
 listen:
 	for {
+		clear(req)
 		if ok := utils.Read(ws, buf, &req); !ok {
 			return
 		}
@@ -48,9 +49,8 @@ listen:
 		case "game-Cancel":
 			panic("TODO")
 		case "game-Move", "game-Forfeit":
-			req = maps.Clone(req)
 			req["player"] = p.Symbol()
-			p.WriteToGameChannel() <- req
+			p.WriteToGameChannel() <- maps.Clone(req)
 		case "chat-Message":
 		case "chat-Report":
 		case "disconnect":

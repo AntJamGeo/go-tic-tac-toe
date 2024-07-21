@@ -65,6 +65,7 @@ func (g *Game) Run() {
 	}
 
 	for req := range g.channel {
+		log.Printf("game got a request: %v", req)
 		switch req["reqType"] {
 		case "game-Move":
 			symbol := req["player"]
