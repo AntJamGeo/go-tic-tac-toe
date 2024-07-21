@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/AntJamGeo/go-tic-tac-toe/backend/internal/player"
 )
 
 var winningCombinations = [8][3]int{
@@ -16,104 +18,101 @@ var winningCombinations = [8][3]int{
 	{0, 4, 8}, // Diagonal from top-left
 	{2, 4, 6}, // Diagonal from top-right
 }
+var symbols = [2]string{"x", "o"}
 
 type Game struct {
-	gameID         string
-	playerNames    map[string]string
-	playerSymbols  map[string]byte
-	playerChannels map[string]chan *map[string]string
-	opponentMap    map[string]string
-	channel        chan *map[string]string
-	gameState      string
+	gameID    string
+	channel   chan map[string]string
+	players   map[string]*player.Player
+	gameState string
 }
 
-func NewGame(gameID string, playerNames map[string]string, playerChannels map[string]chan *map[string]string) *Game {
-	opponentMap := make(map[string]string)
-	for k := range playerChannels {
-		for innerK := range playerChannels {
-			if k != innerK {
-				opponentMap[k] = innerK
-			}
-		}
+func NewGame(gameID string, players []*player.Player) *Game {
+	channel := make(chan map[string]string)
+	playersMap := make(map[string]*player.Player)
+	for i, p := range players {
+		playersMap[symbols[i]] = p
+		p.SetOpponent(players[1-i])
+		p.SetSymbol(symbols[i])
+		defer p.ConnectToGame(channel)
 	}
 	return &Game{
-		gameID:         gameID,
-		playerNames:    playerNames,
-		playerSymbols:  nil,
-		playerChannels: playerChannels,
-		opponentMap:    opponentMap,
-		channel:        make(chan *map[string]string),
-		gameState:      "---------",
+		gameID:    gameID,
+		channel:   channel,
+		players:   playersMap,
+		gameState: "---------",
 	}
-}
-
-func (g *Game) ID() string {
-	return g.gameID
-}
-
-func (g *Game) Channel() chan *map[string]string {
-	return g.channel
 }
 
 func (g *Game) Run() {
-	for msg := range g.channel {
-		switch (*msg)["msgType"] {
-		case "getGameData":
-			playerID := (*msg)["playerID"]
-			rsp := map[string]string{"opponentName": g.playerNames[g.opponentMap[playerID]], "gameID": g.gameID}
-			g.playerChannels[playerID] <- &rsp
-		case "ready":
-			playerID := (*msg)["playerID"]
-			opponentID := g.opponentMap[playerID]
-			for {
-				msg = <-g.channel
-				if val := (*msg)["msgType"]; val == "ready" {
-					if (*msg)["playerID"] == opponentID {
-						break
-					}
-				}
-				log.Printf("received unexpected message while waiting for ready confirmation: %s", (*msg))
-			}
-			log.Printf("both players ready, starting game %s", g.ID())
-			g.playerChannels[playerID] <- &map[string]string{"msgType": "gameStart", "gameState": g.gameState, "yourTurn": "true"}
-			g.playerChannels[opponentID] <- &map[string]string{"msgType": "gameStart", "gameState": g.gameState, "yourTurn": "false"}
-			g.playerSymbols = map[string]byte{playerID: 'x', opponentID: 'o'}
-		case "gameUpdate":
-			playerID := (*msg)["playerID"]
-			opponentID := g.opponentMap[playerID]
-			cell, err := strconv.Atoi((*msg)["cell"])
+	var rsp map[string]string
+
+	for symbol, p := range g.players {
+		var yourTurn string
+		if symbol == "x" {
+			yourTurn = "true"
+		} else {
+			yourTurn = "false"
+		}
+		rsp = map[string]string{
+			"rspType":      "game-Start",
+			"gameID":       g.gameID,
+			"gameState":    "---------",
+			"opponentName": p.Opponent().Name(),
+			"yourTurn":     yourTurn,
+		}
+		p.ReadFromGameChannel() <- rsp
+	}
+
+	for req := range g.channel {
+		switch req["reqType"] {
+		case "game-Move":
+			symbol := req["player"]
+			p := g.players[symbol]
+			op := p.Opponent()
+			cell, err := strconv.Atoi(req["cell"])
 			if err != nil {
-				log.Printf("received non-numerical value for cell number: %s", (*msg)["cell"])
+				log.Printf("received non-numerical value for cell number: %s", req["cell"])
 			}
-			g.gameState = g.gameState[:cell] + string(g.playerSymbols[playerID]) + g.gameState[cell+1:]
-			if winnerID, cells := g.gameWon(); winnerID != "" {
-				g.playerChannels[winnerID] <- &map[string]string{"msgType": "gameWon", "gameState": g.gameState, "winner": "true", "cells": cells}
-				g.playerChannels[g.opponentMap[winnerID]] <- &map[string]string{"msgType": "gameWon", "gameState": g.gameState, "winner": "false", "cells": cells}
+			g.gameState = g.gameState[:cell] + symbol + g.gameState[cell+1:]
+			if cells := g.gameWon(); cells != "" {
+				p.ReadFromGameChannel() <- map[string]string{
+					"rspType":   "game-Won",
+					"gameState": g.gameState,
+					"winner":    "true",
+					"cells":     cells,
+				}
+				op.ReadFromGameChannel() <- map[string]string{
+					"rspType":   "game-Won",
+					"gameState": g.gameState,
+					"winner":    "false",
+					"cells":     cells,
+				}
 				g.deregister()
 			} else {
-				g.playerChannels[opponentID] <- &map[string]string{"msgType": "gameUpdate", "gameState": g.gameState, "yourTurn": "true"}
-				g.playerChannels[playerID] <- &map[string]string{"msgType": "gameUpdate", "gameState": g.gameState, "yourTurn": "false"}
+				p.ReadFromGameChannel() <- map[string]string{
+					"rspType":   "game-Update",
+					"gameState": g.gameState,
+					"yourTurn":  "false",
+				}
+				op.ReadFromGameChannel() <- map[string]string{
+					"rspType":   "game-Update",
+					"gameState": g.gameState,
+					"yourTurn":  "true",
+				}
 			}
+		case "game-Forfeit":
 		}
 	}
 }
 
-func (g *Game) gameWon() (winnerID string, cells string) {
+func (g *Game) gameWon() (cells string) {
 	for _, combo := range winningCombinations {
 		if g.gameState[combo[0]] != '-' && g.gameState[combo[0]] == g.gameState[combo[1]] && g.gameState[combo[1]] == g.gameState[combo[2]] {
-			for playerID, symbol := range g.playerSymbols {
-				if symbol == g.gameState[combo[0]] {
-					winnerID = playerID
-				} else {
-					winnerID = g.opponentMap[playerID]
-				}
-				break
-			}
-			return winnerID, fmt.Sprintf("%d%d%d", combo[0], combo[1], combo[2])
+			return fmt.Sprintf("%d%d%d", combo[0], combo[1], combo[2])
 		}
 	}
-
-	return "", ""
+	return ""
 }
 
 func (g *Game) deregister() {

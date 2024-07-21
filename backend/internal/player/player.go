@@ -1,35 +1,61 @@
 package player
 
 type Player struct {
-	id                  string
+	readFromGameChannel chan map[string]string
+	writeToGameChannel  chan map[string]string
+	newGameChannel      chan chan map[string]string
 	name                string
-	newGameChannel      chan chan *map[string]string
-	gameToPlayerChannel chan *map[string]string
-	playerToGameChannel chan *map[string]string
+	opponent            *Player
+	symbol              string
 }
 
-func NewPlayer(id string, name string) *Player {
+func NewPlayer() *Player {
 	return &Player{
-		id:                  id,
-		name:                name,
-		newGameChannel:      make(chan chan *map[string]string),
-		gameToPlayerChannel: make(chan *map[string]string),
-		playerToGameChannel: nil,
+		readFromGameChannel: make(chan map[string]string),
+		newGameChannel:      make(chan chan map[string]string),
 	}
 }
 
-func (p *Player) ID() string {
-	return p.id
+func (p *Player) ReadFromGameChannel() chan map[string]string {
+	return p.readFromGameChannel
+}
+
+func (p *Player) WriteToGameChannel() chan map[string]string {
+	return p.writeToGameChannel
+}
+
+func (p *Player) NewGameChannel() chan chan map[string]string {
+	return p.newGameChannel
+}
+
+func (p *Player) AwaitGame() {
+	p.writeToGameChannel = <-p.newGameChannel
+}
+
+func (p *Player) ConnectToGame(gameChannel chan map[string]string) {
+	p.newGameChannel <- gameChannel
 }
 
 func (p *Player) Name() string {
 	return p.name
 }
 
-func (p *Player) NewGameChannel() chan chan *map[string]string {
-	return p.newGameChannel
+func (p *Player) SetName(name string) {
+	p.name = name
 }
 
-func (p *Player) GameToPlayerChannel() chan *map[string]string {
-	return p.gameToPlayerChannel
+func (p *Player) Opponent() *Player {
+	return p.opponent
+}
+
+func (p *Player) SetOpponent(opponent *Player) {
+	p.opponent = opponent
+}
+
+func (p *Player) Symbol() string {
+	return p.symbol
+}
+
+func (p *Player) SetSymbol(symbol string) {
+	p.symbol = symbol
 }

@@ -7,16 +7,15 @@ import (
 
 	"github.com/AntJamGeo/go-tic-tac-toe/backend/internal/game"
 	"github.com/AntJamGeo/go-tic-tac-toe/backend/internal/matchmaker"
-	"github.com/AntJamGeo/go-tic-tac-toe/backend/internal/player"
+	"github.com/AntJamGeo/go-tic-tac-toe/backend/internal/playermanager"
 	"github.com/AntJamGeo/go-tic-tac-toe/backend/internal/utils"
 	"golang.org/x/net/websocket"
 )
 
 func main() {
-	pm := player.NewPlayerManager()
 	mm := matchmaker.NewMatchmaker()
 	gm := game.NewGameManager()
-	go pm.Run(mm.Channel())
+	pm := playermanager.NewPlayerManager(mm.Channel())
 	go mm.Run(gm.Channel())
 	go gm.Run()
 	http.Handle("/", http.FileServer(http.Dir(filepath.Join(utils.Root, "frontend"))))

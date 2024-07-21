@@ -28,7 +28,6 @@ func (mm *Matchmaker) Run(gmChannel chan []*player.Player) {
 		// Add player p to the waiting room
 		mm.waitingRoomMu.Lock()
 		mm.waitingRoom = append(mm.waitingRoom, p)
-		log.Printf("%s:%s has been admitted to the waiting room", p.Name(), p.ID())
 
 		// If mm.waitingRoom is full, send it off to be made into a game
 		if len(mm.waitingRoom) == maxRoomSize {

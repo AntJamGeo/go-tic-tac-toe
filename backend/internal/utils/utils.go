@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/json"
-	"errors"
 	"log"
 	"math/rand"
 
@@ -28,43 +27,25 @@ func RandSeq(n int) string {
 	return string(b)
 }
 
-func validateMsg(msg *map[string]string) (msgType string, err error) {
-	msgType, ok := (*msg)["msgType"]
-	if !ok {
-		return "", errors.New("msgType not found in msg")
-	}
-	return msgType, nil
-}
-
-func ReadMsg(ws *websocket.Conn, buf []byte, msg *map[string]string, expectedMsgType string) (ok bool) {
+func Read(ws *websocket.Conn, buf []byte, req *map[string]string) (ok bool) {
 	n, err := ws.Read(buf)
 	if err != nil {
-		log.Printf("bad read: error receiving %s message: %s", expectedMsgType, err)
+		log.Printf("bad read: error receiving request: %s", err)
 		return false
 	}
-
-	json.Unmarshal(buf[:n], msg)
-	msgType, err := validateMsg(msg)
-	if err != nil || msgType != expectedMsgType {
-		log.Printf("bad read: expected message with msgType=\"%s\", got %s", expectedMsgType, msg)
+	json.Unmarshal(buf[:n], req)
+	_, ok = (*req)["reqType"]
+	if !ok {
+		log.Printf("bad read: found no reqType in request: %v", *req)
 		return false
 	}
 	return true
 }
 
-func GetMsgData(msg *map[string]string, msgType string, key string) (val string, ok bool) {
-	val, ok = (*msg)[key]
-	if !ok {
-		log.Printf("bad get: no %s found in %s message", key, msgType)
-	}
-	return val, ok
-}
-
-func WriteMsg(ws *websocket.Conn, msg *map[string]string, msgType string, playerName string, playerID string) (ok bool) {
-	msgBytes, _ := json.Marshal(msg)
-	_, err := ws.Write(msgBytes)
-	if err != nil {
-		log.Printf("bad write: failed to send %s to %s:%s : %s", msgType, playerName, playerID, err)
+func Write(ws *websocket.Conn, rsp map[string]string) (ok bool) {
+	rspBytes, _ := json.Marshal(rsp)
+	if _, err := ws.Write(rspBytes); err != nil {
+		log.Printf("bad write: failed to send response %v. got error: %s", rsp, err)
 		return false
 	}
 	return true

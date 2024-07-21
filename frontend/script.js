@@ -84,6 +84,12 @@ function loadGamePage() {
     notification = createP("notification", notificationTextArea, "loading game...");
 }
 
+// If pressing the "back to home" button after game, must disconnect from the game first
+function backToHome() {
+    socket.send(JSON.stringify({ reqType: "disconnect" }));
+    loadHomePage();
+}
+
 // Functions for joining games
 // New user name is set when joining game from home page
 function joinGameNewUserName() {
@@ -103,6 +109,8 @@ function joinGameNewUserName() {
 
 // Same user name is used when joining a game straight after finishing another
 function joinGameSameUserName() {
+    socket.send(JSON.stringify({ reqType: "disconnect" }));
+
     joinNewGameButton.removeEventListener("click", joinGameSameUserName);
     joinNewGameButton.classList.add("button-clicked");
     joinNewGameButton.setAttribute("tabindex", "");
@@ -115,32 +123,31 @@ function joinGame() {
     socket = new WebSocket("ws://localhost:3000/play");
 
     socket.onopen = function(event) {
-        socket.send(JSON.stringify({ msgType: "connecting", playerName: playerName }));
+        socket.send(JSON.stringify({ reqType: "game-Connect", playerName: playerName }));
     }
 
     socket.onmessage = function(event) {
         data = JSON.parse(event.data);
         console.log(data);
-        switch (data.msgType) {
-            case "joinGame":
-                gameID = data.gameID;
-                opponentName = data.opponentName;
-                loadGamePage();
-                break;
-            case "gameStart":
-            case "gameUpdate":
+        switch (data.rspType) {
+            case "game-Start":
+            case "game-Update":
                 gameState = data.gameState;
                 yourTurn = data.yourTurn === "true" ? true : false;
+
+                if (data.rspType === "game-Start") {
+                    gameID = data.gameID;
+                    opponentName = data.opponentName;
+                    playerSymbol = yourTurn ? "x" : "o";
+                    loadGamePage();
+                }
 
                 notification.innerText = yourTurn ? "your turn" : "waiting for opponent..."
                 for (let i = 0; i < gameState.length; i++) {
                     updateCell(i, gameState[i], yourTurn);
                 }
-                if (data.msgType === "gameStart") {
-                    playerSymbol = yourTurn ? "x" : "o";
-                }
                 break;
-            case "gameWon":
+            case "game-Won":
                 gameState = data.gameState;
                 winner = data.winner === "true" ? true : false;
                 winningCells = data.cells;
@@ -151,14 +158,15 @@ function joinGame() {
                     updateCell(i, gameState[i], false);
                 }
                 updateWinningCells(winningCells);
+
+                notificationButtonArea = createDiv("notification-button-area", notificationArea);
+                joinNewGameButton = createButton("join-new-game-button", notificationButtonArea, "1", "join new game", joinGameSameUserName);
+                backToHomeButton = createButton("back-to-home-button", notificationButtonArea, "2", "back to home", backToHome);
                 break;
         }
     }
 
     socket.onclose = function(event) {
-        notificationButtonArea = createDiv("notification-button-area", notificationArea);
-        joinNewGameButton = createButton("join-new-game-button", notificationButtonArea, "1", "join new game", joinGameSameUserName);
-        backToHomeButton = createButton("back-to-home-button", notificationButtonArea, "2", "back to home", loadHomePage);
     }
 
     socket.onerror = function(event) {
@@ -173,7 +181,7 @@ function makeMove(event) {
         cells[i].removeEventListener("click", makeMove);
         cells[i].style.cursor = "";
     }
-    socket.send(JSON.stringify({ msgType: "gameUpdate", "cell": cell.id.slice(4) }))
+    socket.send(JSON.stringify({ reqType: "game-Move", "cell": cell.id.slice(4) }))
 }
 
 function updateCell(i, cellState, yourTurn) {
