@@ -47,7 +47,7 @@ listen:
 			pm.matchmakerChannel <- p
 			log.Printf("sent %s to matchmaker", p.Name())
 		case "game-Cancel":
-			panic("TODO")
+			log.Printf("TODO: handle game-Cancel client message")
 		case "game-Move", "game-Forfeit":
 			req["player"] = p.Symbol()
 			p.WriteToGameChannel() <- maps.Clone(req)
@@ -63,14 +63,12 @@ listen:
 }
 
 func (pm *PlayerManager) listenToGame(ws *websocket.Conn, wg *sync.WaitGroup, p *player.Player) {
-	log.Printf("awaiting game start")
 	p.AwaitGame()
-	log.Printf("game started")
 	for rsp := range p.ReadFromGameChannel() {
 		if ok := utils.Write(ws, rsp); !ok {
-			panic("TODO")
+			log.Printf("TODO: handle non-ok writes called by pm.listenToGame")
 		}
-		if rsp["rspType"] == "game-Won" {
+		if rsp["rspType"] == "game-Won" || rsp["rspType"] == "game-Drawn" {
 			break
 		}
 	}

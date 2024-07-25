@@ -25,6 +25,7 @@ type Game struct {
 	channel   chan map[string]string
 	players   map[string]*player.Player
 	gameState string
+	turns     int
 }
 
 func NewGame(gameID string, players []*player.Player) *Game {
@@ -41,6 +42,7 @@ func NewGame(gameID string, players []*player.Player) *Game {
 		channel:   channel,
 		players:   playersMap,
 		gameState: "---------",
+		turns:     0,
 	}
 }
 
@@ -68,6 +70,7 @@ func (g *Game) Run() {
 		log.Printf("game got a request: %v", req)
 		switch req["reqType"] {
 		case "game-Move":
+			g.turns++
 			symbol := req["player"]
 			p := g.players[symbol]
 			op := p.Opponent()
@@ -88,6 +91,16 @@ func (g *Game) Run() {
 					"gameState": g.gameState,
 					"winner":    "false",
 					"cells":     cells,
+				}
+				g.deregister()
+			} else if g.turns == 9 {
+				p.ReadFromGameChannel() <- map[string]string{
+					"rspType":   "game-Drawn",
+					"gameState": g.gameState,
+				}
+				op.ReadFromGameChannel() <- map[string]string{
+					"rspType":   "game-Drawn",
+					"gameState": g.gameState,
 				}
 				g.deregister()
 			} else {

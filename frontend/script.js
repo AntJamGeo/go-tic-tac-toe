@@ -150,18 +150,20 @@ function joinGame() {
                     updateCell(i, gameState[i], yourTurn);
                 }
                 break;
+            case "game-Drawn":
             case "game-Won":
                 gameState = data.gameState;
-                winner = data.winner === "true" ? true : false;
-                winningCells = data.cells;
-
-                notification.innerText = winner ? "you win!" : "better luck next time..."
-
                 for (let i = 0; i < gameState.length; i++) {
                     updateCell(i, gameState[i], false);
                 }
-                updateWinningCells(winningCells);
-
+                if (data.rspType === "game-Won") {
+                    winner = data.winner === "true" ? true : false;
+                    winningCells = data.cells;
+                    updateWinningCells(winningCells);
+                    notification.innerText = winner ? "you win!" : "better luck next time..."
+                } else {
+                    notification.innerText = "it's a tie!"
+                }
                 notificationButtonArea = createDiv("notification-button-area", notificationArea);
                 joinNewGameButton = createButton("join-new-game-button", notificationButtonArea, "1", "join new game", joinGameSameUserName);
                 backToHomeButton = createButton("back-to-home-button", notificationButtonArea, "2", "back to home", backToHome);

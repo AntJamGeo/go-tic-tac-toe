@@ -22,7 +22,7 @@ A player can then choose to join another game or go back to the home page.
 ## To-Do List
 A list of potential things for me to do in the future:
 
-- [ ] Handle draws
+- [x] Handle draws
 - [ ] Validate that a move is allowed on server side
 - [ ] Add ability to cancel matchmaking after clicking to join
 - [ ] Add different themes
