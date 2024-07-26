@@ -47,8 +47,6 @@ func NewGame(gameID string, players []*player.Player) *Game {
 }
 
 func (g *Game) Run() {
-	var rsp map[string]string
-
 	for symbol, p := range g.players {
 		var yourTurn string
 		if symbol == "x" {
@@ -56,64 +54,86 @@ func (g *Game) Run() {
 		} else {
 			yourTurn = "false"
 		}
-		rsp = map[string]string{
-			"rspType":      "game-Start",
-			"gameID":       g.gameID,
-			"gameState":    "---------",
-			"opponentName": p.Opponent().Name(),
-			"yourTurn":     yourTurn,
-		}
-		p.ReadFromGameChannel() <- rsp
+		p.Receive(
+			map[string]string{
+				"rspType":      "game-Start",
+				"gameID":       g.gameID,
+				"gameState":    "---------",
+				"opponentName": p.Opponent().Name(),
+				"yourTurn":     yourTurn,
+			},
+		)
 	}
 
 	for req := range g.channel {
-		log.Printf("game got a request: %v", req)
+		log.Printf("gameID: %s - game got a request: %v", g.gameID, req)
 		switch req["reqType"] {
 		case "game-Move":
-			g.turns++
 			symbol := req["player"]
 			p := g.players[symbol]
+			if g.invalidPlayer(symbol) {
+				log.Printf("gameID: %s - player \"%s\" attempted to make a move when it is not their turn", g.gameID, p.Name())
+				continue
+			}
 			op := p.Opponent()
 			cell, err := strconv.Atoi(req["cell"])
 			if err != nil {
-				log.Printf("received non-numerical value for cell number: %s", req["cell"])
+				log.Printf("gameID: %s - received non-numerical value \"%s\" for cell number from player \"%s\"", g.gameID, req["cell"], p.Name())
+				continue
 			}
+			if g.invalidMove(cell) {
+				log.Printf("gameID: %s - received invalid move from player \"%s\": cell %d is not a valid cell", g.gameID, p.Name(), cell)
+				continue
+			}
+			g.turns++
 			g.gameState = g.gameState[:cell] + symbol + g.gameState[cell+1:]
 			if cells := g.gameWon(); cells != "" {
-				p.ReadFromGameChannel() <- map[string]string{
-					"rspType":   "game-Won",
-					"gameState": g.gameState,
-					"winner":    "true",
-					"cells":     cells,
-				}
-				op.ReadFromGameChannel() <- map[string]string{
-					"rspType":   "game-Won",
-					"gameState": g.gameState,
-					"winner":    "false",
-					"cells":     cells,
-				}
+				p.Receive(
+					map[string]string{
+						"rspType":   "game-Won",
+						"gameState": g.gameState,
+						"winner":    "true",
+						"cells":     cells,
+					},
+				)
+				op.Receive(
+					map[string]string{
+						"rspType":   "game-Won",
+						"gameState": g.gameState,
+						"winner":    "false",
+						"cells":     cells,
+					},
+				)
 				g.deregister()
 			} else if g.turns == 9 {
-				p.ReadFromGameChannel() <- map[string]string{
-					"rspType":   "game-Drawn",
-					"gameState": g.gameState,
-				}
-				op.ReadFromGameChannel() <- map[string]string{
-					"rspType":   "game-Drawn",
-					"gameState": g.gameState,
-				}
+				p.Receive(
+					map[string]string{
+						"rspType":   "game-Drawn",
+						"gameState": g.gameState,
+					},
+				)
+				op.Receive(
+					map[string]string{
+						"rspType":   "game-Drawn",
+						"gameState": g.gameState,
+					},
+				)
 				g.deregister()
 			} else {
-				p.ReadFromGameChannel() <- map[string]string{
-					"rspType":   "game-Update",
-					"gameState": g.gameState,
-					"yourTurn":  "false",
-				}
-				op.ReadFromGameChannel() <- map[string]string{
-					"rspType":   "game-Update",
-					"gameState": g.gameState,
-					"yourTurn":  "true",
-				}
+				p.Receive(
+					map[string]string{
+						"rspType":   "game-Update",
+						"gameState": g.gameState,
+						"yourTurn":  "false",
+					},
+				)
+				op.Receive(
+					map[string]string{
+						"rspType":   "game-Update",
+						"gameState": g.gameState,
+						"yourTurn":  "true",
+					},
+				)
 			}
 		case "game-Forfeit":
 		}
@@ -121,12 +141,27 @@ func (g *Game) Run() {
 }
 
 func (g *Game) gameWon() (cells string) {
+	gs := g.gameState
 	for _, combo := range winningCombinations {
-		if g.gameState[combo[0]] != '-' && g.gameState[combo[0]] == g.gameState[combo[1]] && g.gameState[combo[1]] == g.gameState[combo[2]] {
+		if gs[combo[0]] != '-' && gs[combo[0]] == gs[combo[1]] && gs[combo[1]] == gs[combo[2]] {
 			return fmt.Sprintf("%d%d%d", combo[0], combo[1], combo[2])
 		}
 	}
 	return ""
+}
+
+func (g *Game) invalidPlayer(symbol string) bool {
+	var expectedSymbol string
+	if g.turns%2 == 1 {
+		expectedSymbol = "o"
+	} else {
+		expectedSymbol = "x"
+	}
+	return expectedSymbol != symbol
+}
+
+func (g *Game) invalidMove(cell int) bool {
+	return cell < 0 || cell > 8 || g.gameState[cell] != '-'
 }
 
 func (g *Game) deregister() {

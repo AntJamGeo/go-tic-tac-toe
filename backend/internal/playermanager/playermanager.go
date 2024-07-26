@@ -37,9 +37,8 @@ listen:
 	for {
 		clear(req)
 		if ok := utils.Read(ws, buf, &req); !ok {
-			return
+			continue
 		}
-		log.Printf("got a request : %v", req)
 		switch req["reqType"] {
 		case "game-Connect":
 			p.SetName(req["playerName"])
@@ -50,7 +49,7 @@ listen:
 			log.Printf("TODO: handle game-Cancel client message")
 		case "game-Move", "game-Forfeit":
 			req["player"] = p.Symbol()
-			p.WriteToGameChannel() <- maps.Clone(req)
+			p.SendToGame(maps.Clone(req))
 		case "chat-Message":
 		case "chat-Report":
 		case "disconnect":
@@ -58,13 +57,13 @@ listen:
 		default:
 		}
 	}
-	wg.Done()
 	log.Printf("stopping listening to %s", p.Name())
+	wg.Done()
 }
 
 func (pm *PlayerManager) listenToGame(ws *websocket.Conn, wg *sync.WaitGroup, p *player.Player) {
 	p.AwaitGame()
-	for rsp := range p.ReadFromGameChannel() {
+	for rsp := range p.Ch() {
 		if ok := utils.Write(ws, rsp); !ok {
 			log.Printf("TODO: handle non-ok writes called by pm.listenToGame")
 		}

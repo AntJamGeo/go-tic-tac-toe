@@ -1,39 +1,39 @@
 package player
 
 type Player struct {
-	readFromGameChannel chan map[string]string
-	writeToGameChannel  chan map[string]string
-	newGameChannel      chan chan map[string]string
-	name                string
-	opponent            *Player
-	symbol              string
+	ch        chan map[string]string
+	gameCh    chan map[string]string
+	newGameCh chan chan map[string]string
+	name      string
+	opponent  *Player
+	symbol    string
 }
 
 func NewPlayer() *Player {
 	return &Player{
-		readFromGameChannel: make(chan map[string]string),
-		newGameChannel:      make(chan chan map[string]string),
+		ch:        make(chan map[string]string),
+		newGameCh: make(chan chan map[string]string),
 	}
 }
 
-func (p *Player) ReadFromGameChannel() chan map[string]string {
-	return p.readFromGameChannel
+func (p *Player) Ch() chan map[string]string {
+	return p.ch
 }
 
-func (p *Player) WriteToGameChannel() chan map[string]string {
-	return p.writeToGameChannel
+func (p *Player) Receive(rsp map[string]string) {
+	p.ch <- rsp
 }
 
-func (p *Player) NewGameChannel() chan chan map[string]string {
-	return p.newGameChannel
+func (p *Player) SendToGame(req map[string]string) {
+	p.gameCh <- req
 }
 
 func (p *Player) AwaitGame() {
-	p.writeToGameChannel = <-p.newGameChannel
+	p.gameCh = <-p.newGameCh
 }
 
-func (p *Player) ConnectToGame(gameChannel chan map[string]string) {
-	p.newGameChannel <- gameChannel
+func (p *Player) ConnectToGame(gameCh chan map[string]string) {
+	p.newGameCh <- gameCh
 }
 
 func (p *Player) Name() string {

@@ -182,10 +182,6 @@ function joinGame() {
 // Game updates
 function makeMove(event) {
     let cell = event.target;
-    for (let i = 0; i < gameState.length; i++) {
-        cells[i].removeEventListener("click", makeMove);
-        cells[i].style.cursor = "";
-    }
     socket.send(JSON.stringify({ reqType: "game-Move", "cell": cell.id.slice(4) }))
 }
 
@@ -203,6 +199,10 @@ function updateCell(i, cellState, yourTurn) {
                 cells[i].style.cursor = "pointer";
             }
             break;
+    }
+    if (!yourTurn) {
+        cells[i].removeEventListener("click", makeMove);
+        cells[i].style.cursor = "";
     }
 }
 
