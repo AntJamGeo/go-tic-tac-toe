@@ -23,7 +23,7 @@ A player can then choose to join another game or go back to the home page.
 A list of potential things for me to do in the future:
 
 - [x] Handle draws
-- [ ] Validate that a move is allowed on server side
+- [x] Validate that a move is allowed on server side
 - [ ] Add ability to cancel matchmaking after clicking to join
 - [ ] Add different themes
 - [ ] Create other game modes, including game modes for more than two players
