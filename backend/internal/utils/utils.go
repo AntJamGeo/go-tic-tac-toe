@@ -19,6 +19,7 @@ var (
 )
 var runes = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
+// RandSeq generates a random base-62 sequence of length n
 func RandSeq(n int) string {
 	b := make([]rune, n)
 	for i := range b {
@@ -27,6 +28,8 @@ func RandSeq(n int) string {
 	return string(b)
 }
 
+// Read takes a websocket connection and reads JSON data sent from it into the provided buffer.
+// It verifies that the data sent is OK, and if it is, unmarshals it into req.
 func Read(ws *websocket.Conn, buf []byte, req *map[string]string) (ok bool) {
 	n, err := ws.Read(buf)
 	if err != nil {
@@ -42,6 +45,7 @@ func Read(ws *websocket.Conn, buf []byte, req *map[string]string) (ok bool) {
 	return true
 }
 
+// Write takes JSON data and sends it through the websocket back to the client.
 func Write(ws *websocket.Conn, rsp map[string]string) (ok bool) {
 	rspBytes, _ := json.Marshal(rsp)
 	if _, err := ws.Write(rspBytes); err != nil {

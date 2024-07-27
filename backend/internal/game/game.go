@@ -20,32 +20,52 @@ var winningCombinations = [8][3]int{
 }
 var symbols = [2]string{"x", "o"}
 
+// Game holds information about a game
 type Game struct {
-	gameID    string
-	channel   chan map[string]string
-	players   map[string]*player.Player
+	// gameID is a unique identifier for a game
+	gameID string
+
+	// ch is the game's receiving channel, listening out for
+	// interactions from the players
+	ch chan map[string]string
+
+	// players holds each player identified by their symbol "x" or "o"
+	players map[string]*player.Player
+
+	// gameState holds the current state of the game, a string of nine
+	// characters, where "-" indicates a cell is empty while "x" or "o"
+	// indicate that cell is occupied by "x" or "o"
 	gameState string
-	turns     int
+
+	// turns is the number of turns played in the game
+	turns int
 }
 
+// NewGame creates a new game from a filled waiting room.
+//
+// It creates a receiving channel to listen out for player interactions,
+// and connects players to the game by passing the channel to each player.
 func NewGame(gameID string, players []*player.Player) *Game {
-	channel := make(chan map[string]string)
+	ch := make(chan map[string]string)
 	playersMap := make(map[string]*player.Player)
 	for i, p := range players {
 		playersMap[symbols[i]] = p
 		p.SetOpponent(players[1-i])
 		p.SetSymbol(symbols[i])
-		defer p.ConnectToGame(channel)
+		defer p.ConnectToGame(ch)
 	}
 	return &Game{
 		gameID:    gameID,
-		channel:   channel,
+		ch:        ch,
 		players:   playersMap,
 		gameState: "---------",
 		turns:     0,
 	}
 }
 
+// Run is the main loop of the Game. It listens for player interactions
+// and updates the game state accordingly, before sending out the updated
+// game state to each player.
 func (g *Game) Run() {
 	for symbol, p := range g.players {
 		var yourTurn string
@@ -65,7 +85,7 @@ func (g *Game) Run() {
 		)
 	}
 
-	for req := range g.channel {
+	for req := range g.ch {
 		log.Printf("gameID: %s - game got a request: %v", g.gameID, req)
 		switch req["reqType"] {
 		case "game-Move":
@@ -106,6 +126,7 @@ func (g *Game) Run() {
 				)
 				g.deregister()
 			} else if g.turns == 9 {
+				// If the game has not been won after 9 turns, it is a draw
 				p.Receive(
 					map[string]string{
 						"rspType":   "game-Drawn",
@@ -140,6 +161,9 @@ func (g *Game) Run() {
 	}
 }
 
+// gameWon checks if the gameState contains one of the winning combinations.
+// It returns the winning cells as a concatenated string, or an empty string,
+// if the game has not been won.
 func (g *Game) gameWon() (cells string) {
 	gs := g.gameState
 	for _, combo := range winningCombinations {
@@ -150,6 +174,8 @@ func (g *Game) gameWon() (cells string) {
 	return ""
 }
 
+// invalidPlayer checks if a player is attempting to move when it is not their
+// turn.
 func (g *Game) invalidPlayer(symbol string) bool {
 	var expectedSymbol string
 	if g.turns%2 == 1 {
@@ -160,10 +186,13 @@ func (g *Game) invalidPlayer(symbol string) bool {
 	return expectedSymbol != symbol
 }
 
+// invalidMove checks if a player is attempting to fill a cell that is already
+// occupied or not within the range of the grid.
 func (g *Game) invalidMove(cell int) bool {
 	return cell < 0 || cell > 8 || g.gameState[cell] != '-'
 }
 
+// deregister informs the GameManager that the game is no longer active.
 func (g *Game) deregister() {
-
+	log.Printf("TODO - deregistering game:%s", g.gameID)
 }

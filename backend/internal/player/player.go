@@ -1,14 +1,38 @@
 package player
 
+// Player holds information about a player.
 type Player struct {
-	ch        chan map[string]string
-	gameCh    chan map[string]string
+	// ch is the player's receiving channel, listening out for
+	// updates from the game
+	ch chan map[string]string
+
+	// gameCh is the channel used by the player to send updates
+	// to the game
+	gameCh chan map[string]string
+
+	// newGameCh is the channel through which a player can receive
+	// a gameCh. When a match has been found, the new game's receiving
+	// channel is sent through here so that the player knows where to
+	// send its updates.
 	newGameCh chan chan map[string]string
-	name      string
-	opponent  *Player
-	symbol    string
+
+	// name is the player's name set by the client.
+	name string
+
+	// opponent is the player's opponent in the game.
+	opponent *Player
+
+	// symbol is the symbol "x" or "o" that the player is playing as in
+	// the game.
+	symbol string
 }
 
+// NewPlayer returns a new Player.
+//
+// Initially, only the player's receiving channels are initialised.
+// A name is set for the player upon receiving a username via the
+// PlayerManager, and the other information needs to be filled in after
+// a game has been found for the player.
 func NewPlayer() *Player {
 	return &Player{
 		ch:        make(chan map[string]string),
@@ -16,22 +40,31 @@ func NewPlayer() *Player {
 	}
 }
 
+// Ch returns the player's receiving channel, listening out for
+// updates from the game.
 func (p *Player) Ch() chan map[string]string {
 	return p.ch
 }
 
+// Receive takes updates from the game so that they can then be
+// processed.
 func (p *Player) Receive(rsp map[string]string) {
 	p.ch <- rsp
 }
 
+// SendToGame sends updates from the client to the game.
 func (p *Player) SendToGame(req map[string]string) {
 	p.gameCh <- req
 }
 
+// AwaitGame waits for a new game to be made for the player.
 func (p *Player) AwaitGame() {
 	p.gameCh = <-p.newGameCh
 }
 
+// ConnectToGame connects the player to the game. It takes a newly-created
+// game's receiving channel so that the updates from the client can be sent
+// to it.
 func (p *Player) ConnectToGame(gameCh chan map[string]string) {
 	p.newGameCh <- gameCh
 }

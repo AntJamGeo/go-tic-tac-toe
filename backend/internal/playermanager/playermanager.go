@@ -10,16 +10,28 @@ import (
 	"golang.org/x/net/websocket"
 )
 
+// PlayerManager handles communication between the client and server,
+// reading incoming messages and sending them to the right service, and
+// forwarding responses from the server back to the client.
 type PlayerManager struct {
-	matchmakerChannel chan *player.Player
+	// matchmakerCh is used to forward a player to the matchmaker service
+	// to join a game
+	matchmakerCh chan *player.Player
 }
 
-func NewPlayerManager(matchmakerChannel chan *player.Player) *PlayerManager {
+// NewPlayerManager returns a new PlayerManager.
+//
+// It requires the channel from a Matchmaker service to send players for
+// matchmaking.
+func NewPlayerManager(matchmakerCh chan *player.Player) *PlayerManager {
 	return &PlayerManager{
-		matchmakerChannel: matchmakerChannel,
+		matchmakerCh: matchmakerCh,
 	}
 }
 
+// HandlePlayer handles websocket connections between the client and the
+// server. Requests will be read from the client and responses will be
+// sent back through the given websocket.
 func (pm *PlayerManager) HandlePlayer(ws *websocket.Conn) {
 	p := player.NewPlayer()
 	wg := sync.WaitGroup{}
@@ -29,6 +41,8 @@ func (pm *PlayerManager) HandlePlayer(ws *websocket.Conn) {
 	wg.Wait()
 }
 
+// listenToClient listens for requests from the client and forwards the
+// message to the correct service.
 func (pm *PlayerManager) listenToClient(ws *websocket.Conn, wg *sync.WaitGroup, p *player.Player) {
 	buf := make([]byte, 1024)
 	var req map[string]string
@@ -42,9 +56,7 @@ listen:
 		switch req["reqType"] {
 		case "game-Connect":
 			p.SetName(req["playerName"])
-			log.Printf("sending %s to matchmaker", p.Name())
-			pm.matchmakerChannel <- p
-			log.Printf("sent %s to matchmaker", p.Name())
+			pm.matchmakerCh <- p
 		case "game-Cancel":
 			log.Printf("TODO: handle game-Cancel client message")
 		case "game-Move", "game-Forfeit":
@@ -57,10 +69,11 @@ listen:
 		default:
 		}
 	}
-	log.Printf("stopping listening to %s", p.Name())
 	wg.Done()
 }
 
+// listenToGame listens for responses from the current game and forwards the
+// response back to the client via the websocket connection.
 func (pm *PlayerManager) listenToGame(ws *websocket.Conn, wg *sync.WaitGroup, p *player.Player) {
 	p.AwaitGame()
 	for rsp := range p.Ch() {
