@@ -59,6 +59,7 @@ A list of potential things for me to do in the future:
 - [x] Handle draws
 - [x] Validate that a move is allowed on server side
 - [x] Dockerise
+- [ ] Shift to a microservice architecture
 - [ ] Add ability to cancel matchmaking after clicking to join
 - [ ] Add different themes
 - [ ] Create other game modes, including game modes for more than two players
