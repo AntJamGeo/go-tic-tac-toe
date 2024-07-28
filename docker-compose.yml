@@ -1,0 +1,9 @@
+services:
+  go-tic-tac-toe:
+    image: go-tic-tac-toe
+    build:
+      context: .
+      target: prod
+    container_name: go-tic-tac-toe
+    ports:
+      - 3000:3000

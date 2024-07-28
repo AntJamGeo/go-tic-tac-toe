@@ -1,0 +1,17 @@
+services:
+  go-tic-tac-toe:
+    image: go-tic-tac-toe-dev
+    build:
+      context: .
+      target: dev
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend/
+          target: /app/frontend/
+        - action: sync
+          path: ./backend/
+          target: /app/backend/
+    container_name: go-tic-tac-toe-dev
+    ports:
+      - 3000:3000
