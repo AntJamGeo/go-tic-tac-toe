@@ -40,13 +40,13 @@ Stop and remove your container using `make down`, or remove both your container 
 ## Development
 A `.air.toml` file is including for hot reloading to make development easy with air. 
 
-## Go
+### Go
 Air can be run locally by running `air` from the root directory. This will watch for updates to the frontend and backend directories.
 
-## Docker
+### Docker
 You can build the development image by linking to the development compose file; run `docker compose -f docker-compose-dev.yml build`. This will build an image called `go-tic-tac-toe-dev`. The server can then be started in development mode by using `docker compose -f docker-compose-dev.yml up`. Once air has started, you will need to watch for changes by pressing "w". For clean up, you can run `docker compose -f docker-compose-dev.yml down`, and the image can be removed by running `docker image rm go-tic-tac-toe-dev`.
 
-## Make + Docker
+### Make + Docker
 This is similar to the instructions for using docker, but with less verbose commands. These are:
 * build: `make build-dev`
 * compose up: `make up-dev`
