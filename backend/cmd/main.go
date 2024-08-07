@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/AntJamGeo/go-tic-tac-toe/backend/internal/game"
+	"github.com/AntJamGeo/go-tic-tac-toe/backend/internal/kafka"
 	"github.com/AntJamGeo/go-tic-tac-toe/backend/internal/matchmaker"
 	"github.com/AntJamGeo/go-tic-tac-toe/backend/internal/playermanager"
 	"github.com/AntJamGeo/go-tic-tac-toe/backend/internal/utils"
@@ -13,6 +14,9 @@ import (
 )
 
 func main() {
+	log.Print("CONNECTING\n")
+	kafka.Init()
+	log.Print("connected\n")
 	gm := game.NewGameManager()
 	mm := matchmaker.NewMatchmaker(gm.Ch())
 	pm := playermanager.NewPlayerManager(mm.Ch())

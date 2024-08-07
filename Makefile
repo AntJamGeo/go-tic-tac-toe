@@ -11,7 +11,7 @@ build-dev:
 
 .PHONY: up-dev
 up-dev:
-	docker compose -f $(DEV_COMPOSE_FILE) up
+	docker compose -f $(DEV_COMPOSE_FILE) up --build
 
 .PHONY: down-dev
 down-dev:
@@ -28,7 +28,7 @@ build:
 
 .PHONY: up
 up:
-	docker compose -f $(PROD_COMPOSE_FILE) up
+	docker compose -f $(PROD_COMPOSE_FILE) up --build
 
 .PHONY: down
 down:

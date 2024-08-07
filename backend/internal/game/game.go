@@ -5,6 +5,7 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/AntJamGeo/go-tic-tac-toe/backend/internal/kafka"
 	"github.com/AntJamGeo/go-tic-tac-toe/backend/internal/player"
 )
 
@@ -54,6 +55,7 @@ func NewGame(gameID string, players []*player.Player) *Game {
 		p.SetSymbol(symbols[i])
 		defer p.ConnectToGame(ch)
 	}
+	kafka.RegisterGame(gameID, players[0].Name(), players[1].Name())
 	return &Game{
 		gameID:    gameID,
 		ch:        ch,
@@ -107,6 +109,7 @@ func (g *Game) Run() {
 			}
 			g.turns++
 			g.gameState = g.gameState[:cell] + symbol + g.gameState[cell+1:]
+			kafka.UpdateGame(g.gameID, g.gameState)
 			if cells := g.gameWon(); cells != "" {
 				p.Receive(
 					map[string]string{
@@ -194,5 +197,6 @@ func (g *Game) invalidMove(cell int) bool {
 
 // deregister informs the GameManager that the game is no longer active.
 func (g *Game) deregister() {
-	log.Printf("TODO - deregistering game:%s", g.gameID)
+	kafka.DeregisterGame(g.gameID)
+	close(g.ch)
 }
