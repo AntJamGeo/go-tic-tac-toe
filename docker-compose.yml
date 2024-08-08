@@ -15,6 +15,18 @@ services:
       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
     image: confluentinc/cp-kafka
+  db:
+    container_name: db
+    ports:
+      - 5432:5432
+    image: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=mydb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d
   go-tic-tac-toe:
     build:
       context: .
@@ -26,14 +38,17 @@ services:
     depends_on:
       - zookeeper
       - cp-kafka
+      - db
   mqtodb:
     build:
       context: ./mqtodb
       target: prod
     container_name: mqtodb
-    ports:
-      - 5432:5432
     image: mqtodb
     depends_on:
       - zookeeper
       - cp-kafka
+      - db
+
+volumes:
+  postgres_data:
