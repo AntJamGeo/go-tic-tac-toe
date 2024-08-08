@@ -1,4 +1,4 @@
-module github.com/AntJamGeo/go-tic-tac-toe/db
+module github.com/AntJamGeo/go-tic-tac-toe/mqtodb
 
 go 1.22.6
 

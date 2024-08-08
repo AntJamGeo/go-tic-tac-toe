@@ -4,14 +4,15 @@ import (
 	"log"
 	"sync"
 
-	"github.com/AntJamGeo/go-tic-tac-toe/db/internal/kafka"
-	"github.com/AntJamGeo/go-tic-tac-toe/db/internal/message"
-	"github.com/AntJamGeo/go-tic-tac-toe/db/internal/postgres"
+	"github.com/AntJamGeo/go-tic-tac-toe/mqtodb/internal/kafka"
+	"github.com/AntJamGeo/go-tic-tac-toe/mqtodb/internal/message"
+	"github.com/AntJamGeo/go-tic-tac-toe/mqtodb/internal/postgres"
 )
 
 func main() {
 	ch := make(chan message.Message)
 	wg := sync.WaitGroup{}
+	log.Printf("hi")
 	wg.Add(2)
 	go func() {
 		kafka.Read(ch)

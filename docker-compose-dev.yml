@@ -34,19 +34,19 @@ services:
     depends_on:
       - zookeeper
       - cp-kafka
-  db:
+  mqtodb:
     build:
-      context: ./db
+      context: ./mqtodb
       target: dev
     develop:
       watch:
         - action: sync
-          path: ./db/
+          path: ./mqtodb/
           target: /app/
-    container_name: db-dev
+    container_name: mqtodb-dev
     ports:
       - 5432:5432
-    image: db-dev
+    image: mqtodb-dev
     depends_on:
       - zookeeper
       - cp-kafka

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/AntJamGeo/go-tic-tac-toe/db/internal/message"
+	"github.com/AntJamGeo/go-tic-tac-toe/mqtodb/internal/message"
 )
 
 func Write(ch chan message.Message) {

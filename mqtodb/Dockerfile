@@ -23,14 +23,14 @@ COPY . .
 RUN go build \
   -ldflags="-linkmode external -extldflags -static" \
   -tags netgo \
-  -o /app/db.exe /app/cmd
+  -o /app/mqtodb.exe /app/cmd
 
 FROM scratch AS prod
 
 WORKDIR /app
 
-COPY --from=build-prod /app/db.exe db.exe
+COPY --from=build-prod /app/mqtodb.exe mqtodb.exe
 
 EXPOSE 5432
 
-CMD ["./db.exe"]
+CMD ["./mqtodb.exe"]
