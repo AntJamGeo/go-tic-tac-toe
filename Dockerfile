@@ -4,9 +4,7 @@ WORKDIR /app
 
 COPY backend/go.mod backend/go.sum /app/backend/
 
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
-    cd ./backend && go mod download
+RUN cd ./backend && go mod download -x
 
 FROM build-base AS dev
 

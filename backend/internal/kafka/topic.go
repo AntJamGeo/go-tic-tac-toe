@@ -18,8 +18,8 @@ func createGameTopic() error {
 		if err == nil {
 			break
 		}
+		log.Printf("failed connection attempt %d/%d to kafkaAddr: %s", i+1, numTopicCreateRetries, kafkaAddr)
 		time.Sleep(time.Second * 10)
-		log.Printf("failed connection attempt %d/%d to kafkaAddr: %s", i, numTopicCreateRetries, kafkaAddr)
 	}
 	if err != nil {
 		return err

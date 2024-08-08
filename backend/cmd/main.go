@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	log.Print("CONNECTING\n")
+	log.Print("connecting\n")
 	kafka.Init()
 	log.Print("connected\n")
 	gm := game.NewGameManager()
