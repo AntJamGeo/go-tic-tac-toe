@@ -33,4 +33,4 @@ COPY --from=build-prod /app/db.exe db.exe
 
 EXPOSE 5432
 
-CMD ["./go-tic-tac-toe.exe"]
+CMD ["./db.exe"]
