@@ -13,7 +13,6 @@ func main() {
 	ch := make(chan message.Message)
 	wg := sync.WaitGroup{}
 	wg.Add(2)
-	log.Printf("hi")
 	go func() {
 		kafka.Read(ch)
 		wg.Done()

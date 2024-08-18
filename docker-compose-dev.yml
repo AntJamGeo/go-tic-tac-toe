@@ -29,15 +29,15 @@ services:
       - ./initdb:/docker-entrypoint-initdb.d
   go-tic-tac-toe:
     build:
-      context: .
+      context: ./app
       target: dev
     develop:
       watch:
         - action: sync
-          path: ./frontend/
+          path: ./app/frontend/
           target: /app/frontend/
         - action: sync
-          path: ./backend/
+          path: ./app/backend/
           target: /app/backend/
     container_name: go-tic-tac-toe-dev
     ports:

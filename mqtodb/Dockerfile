@@ -31,6 +31,4 @@ WORKDIR /app
 
 COPY --from=build-prod /app/mqtodb.exe mqtodb.exe
 
-EXPOSE 5432
-
 CMD ["./mqtodb.exe"]

@@ -29,7 +29,7 @@ services:
       - ./initdb:/docker-entrypoint-initdb.d
   go-tic-tac-toe:
     build:
-      context: .
+      context: ./app
       target: prod
     container_name: go-tic-tac-toe
     ports:
