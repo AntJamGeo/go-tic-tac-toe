@@ -2,13 +2,13 @@ package player
 
 // Player holds information about a player.
 type Player struct {
-	// ch is the player's receiving channel, listening out for
+	// gameReceiverCh is the player's receiving channel, listening out for
 	// updates from the game
-	ch chan map[string]string
+	gameReceiverCh chan map[string]string
 
-	// gameCh is the channel used by the player to send updates
+	// gameSenderCh is the channel used by the player to send updates
 	// to the game
-	gameCh chan map[string]string
+	gameSenderCh chan map[string]string
 
 	// newGameCh is the channel through which a player can receive
 	// a gameCh. When a match has been found, the new game's receiving
@@ -35,38 +35,38 @@ type Player struct {
 // a game has been found for the player.
 func NewPlayer() *Player {
 	return &Player{
-		ch:        make(chan map[string]string),
-		newGameCh: make(chan chan map[string]string),
+		gameReceiverCh: make(chan map[string]string),
+		newGameCh:      make(chan chan map[string]string),
 	}
 }
 
-// Ch returns the player's receiving channel, listening out for
+// GameReceiverCh returns the player's receiving channel, listening out for
 // updates from the game.
-func (p *Player) Ch() chan map[string]string {
-	return p.ch
+func (p *Player) GameReceiverCh() chan map[string]string {
+	return p.gameReceiverCh
 }
 
-// Receive takes updates from the game so that they can then be
+// ReceiveFromGame takes updates from the game so that they can then be
 // processed.
-func (p *Player) Receive(rsp map[string]string) {
-	p.ch <- rsp
+func (p *Player) ReceiveFromGame(rsp map[string]string) {
+	p.gameReceiverCh <- rsp
 }
 
 // SendToGame sends updates from the client to the game.
 func (p *Player) SendToGame(req map[string]string) {
-	p.gameCh <- req
+	p.gameSenderCh <- req
 }
 
 // AwaitGame waits for a new game to be made for the player.
 func (p *Player) AwaitGame() {
-	p.gameCh = <-p.newGameCh
+	p.gameSenderCh = <-p.newGameCh
 }
 
 // ConnectToGame connects the player to the game. It takes a newly-created
 // game's receiving channel so that the updates from the client can be sent
 // to it.
-func (p *Player) ConnectToGame(gameCh chan map[string]string) {
-	p.newGameCh <- gameCh
+func (p *Player) ConnectToGame(gameSenderCh chan map[string]string) {
+	p.newGameCh <- gameSenderCh
 }
 
 func (p *Player) Name() string {

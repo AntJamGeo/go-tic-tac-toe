@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/AntJamGeo/go-tic-tac-toe/backend/internal/kafka"
+	"github.com/AntJamGeo/go-tic-tac-toe/backend/internal/message"
 	"github.com/AntJamGeo/go-tic-tac-toe/backend/internal/player"
 )
 
@@ -76,9 +77,9 @@ func (g *Game) Run() {
 		} else {
 			yourTurn = "false"
 		}
-		p.Receive(
+		p.ReceiveFromGame(
 			map[string]string{
-				"rspType":      "game-Start",
+				"rspType":      message.GameStart,
 				"gameID":       g.gameID,
 				"gameState":    "---------",
 				"opponentName": p.Opponent().Name(),
@@ -90,7 +91,7 @@ func (g *Game) Run() {
 	for req := range g.ch {
 		log.Printf("gameID: %s - game got a request: %v", g.gameID, req)
 		switch req["reqType"] {
-		case "game-Move":
+		case message.PlayerMove:
 			symbol := req["player"]
 			p := g.players[symbol]
 			if g.invalidPlayer(symbol) {
@@ -111,17 +112,17 @@ func (g *Game) Run() {
 			g.gameState = g.gameState[:cell] + symbol + g.gameState[cell+1:]
 			kafka.UpdateGame(g.gameID, g.gameState)
 			if cells := g.gameWon(); cells != "" {
-				p.Receive(
+				p.ReceiveFromGame(
 					map[string]string{
-						"rspType":   "game-Won",
+						"rspType":   message.GameWon,
 						"gameState": g.gameState,
 						"winner":    "true",
 						"cells":     cells,
 					},
 				)
-				op.Receive(
+				op.ReceiveFromGame(
 					map[string]string{
-						"rspType":   "game-Won",
+						"rspType":   message.GameWon,
 						"gameState": g.gameState,
 						"winner":    "false",
 						"cells":     cells,
@@ -130,36 +131,44 @@ func (g *Game) Run() {
 				g.deregister()
 			} else if g.turns == 9 {
 				// If the game has not been won after 9 turns, it is a draw
-				p.Receive(
+				p.ReceiveFromGame(
 					map[string]string{
-						"rspType":   "game-Drawn",
+						"rspType":   message.GameDrawn,
 						"gameState": g.gameState,
 					},
 				)
-				op.Receive(
+				op.ReceiveFromGame(
 					map[string]string{
-						"rspType":   "game-Drawn",
+						"rspType":   message.GameDrawn,
 						"gameState": g.gameState,
 					},
 				)
 				g.deregister()
 			} else {
-				p.Receive(
+				p.ReceiveFromGame(
 					map[string]string{
-						"rspType":   "game-Update",
+						"rspType":   message.GameUpdate,
 						"gameState": g.gameState,
 						"yourTurn":  "false",
 					},
 				)
-				op.Receive(
+				op.ReceiveFromGame(
 					map[string]string{
-						"rspType":   "game-Update",
+						"rspType":   message.GameUpdate,
 						"gameState": g.gameState,
 						"yourTurn":  "true",
 					},
 				)
 			}
-		case "game-Forfeit":
+		case message.PlayerDisconnect:
+			symbol := req["player"]
+			p := g.players[symbol]
+			p.Opponent().ReceiveFromGame(
+				map[string]string{
+					"rspType": message.OpponentDisconnect,
+				},
+			)
+		case message.PlayerForfeit:
 		}
 	}
 }

@@ -31,6 +31,25 @@ let gameState;
 let yourTurn;
 let winningCells;
 
+// Message Types
+// Player
+const PLAYER_CANCEL = "player-Cancel";
+const PLAYER_DISCONNECT = "player-Disconnect";
+const PLAYER_FORFEIT = "player-Forfeit";
+const PLAYER_JOIN = "player-Join";
+const PLAYER_MOVE = "player-Move";
+const PLAYER_LEAVE = "player-Leave";
+
+// Opponent
+const OPPONENT_DISCONNECT = "opponent-Disconnect";
+const OPPONENT_FORFEIT = "opponent-Forfeit";
+
+// Game
+const GAME_DRAWN = "game-Drawn";
+const GAME_START = "game-Start";
+const GAME_UPDATE = "game-Update";
+const GAME_WON = "game-Won";
+
 window.addEventListener("DOMContentLoaded", (event) => {
     loadHomePage();
 })
@@ -86,7 +105,7 @@ function loadGamePage() {
 
 // If pressing the "back to home" button after game, must disconnect from the game first
 function backToHome() {
-    socket.send(JSON.stringify({ reqType: "disconnect" }));
+    socket.send(JSON.stringify({ reqType: PLAYER_LEAVE }));
     loadHomePage();
 }
 
@@ -109,7 +128,7 @@ function joinGameNewUserName() {
 
 // Same user name is used when joining a game straight after finishing another
 function joinGameSameUserName() {
-    socket.send(JSON.stringify({ reqType: "disconnect" }));
+    socket.send(JSON.stringify({ reqType: PLAYER_LEAVE }));
 
     joinNewGameButton.removeEventListener("click", joinGameSameUserName);
     joinNewGameButton.classList.add("button-clicked");
@@ -126,19 +145,19 @@ function joinGame() {
     socket = new WebSocket("ws://localhost:3000/play");
 
     socket.onopen = function(event) {
-        socket.send(JSON.stringify({ reqType: "game-Connect", playerName: playerName }));
+        socket.send(JSON.stringify({ reqType: PLAYER_JOIN, playerName: playerName }));
     }
 
     socket.onmessage = function(event) {
         data = JSON.parse(event.data);
         console.log(data);
         switch (data.rspType) {
-            case "game-Start":
-            case "game-Update":
+            case GAME_START:
+            case GAME_UPDATE:
                 gameState = data.gameState;
                 yourTurn = data.yourTurn === "true" ? true : false;
 
-                if (data.rspType === "game-Start") {
+                if (data.rspType === GAME_START) {
                     gameID = data.gameID;
                     opponentName = data.opponentName;
                     playerSymbol = yourTurn ? "x" : "o";
@@ -150,13 +169,13 @@ function joinGame() {
                     updateCell(i, gameState[i], yourTurn);
                 }
                 break;
-            case "game-Drawn":
-            case "game-Won":
+            case GAME_DRAWN:
+            case GAME_WON:
                 gameState = data.gameState;
                 for (let i = 0; i < gameState.length; i++) {
                     updateCell(i, gameState[i], false);
                 }
-                if (data.rspType === "game-Won") {
+                if (data.rspType === GAME_WON) {
                     winner = data.winner === "true" ? true : false;
                     winningCells = data.cells;
                     updateWinningCells(winningCells);
@@ -164,6 +183,12 @@ function joinGame() {
                 } else {
                     notification.innerText = "it's a tie!"
                 }
+                notificationButtonArea = createDiv("notification-button-area", notificationArea);
+                joinNewGameButton = createButton("join-new-game-button", notificationButtonArea, "1", "join new game", joinGameSameUserName);
+                backToHomeButton = createButton("back-to-home-button", notificationButtonArea, "2", "back to home", backToHome);
+                break;
+            case OPPONENT_DISCONNECT:
+                notification.innerText = "opponent left the game, you win!"
                 notificationButtonArea = createDiv("notification-button-area", notificationArea);
                 joinNewGameButton = createButton("join-new-game-button", notificationButtonArea, "1", "join new game", joinGameSameUserName);
                 backToHomeButton = createButton("back-to-home-button", notificationButtonArea, "2", "back to home", backToHome);
@@ -182,7 +207,7 @@ function joinGame() {
 // Game updates
 function makeMove(event) {
     let cell = event.target;
-    socket.send(JSON.stringify({ reqType: "game-Move", "cell": cell.id.slice(4) }))
+    socket.send(JSON.stringify({ reqType: PLAYER_MOVE, "cell": cell.id.slice(4) }))
 }
 
 function updateCell(i, cellState, yourTurn) {
